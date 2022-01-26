@@ -28,13 +28,12 @@ cd ~/catkin_ws/
 catkin_make
 ```
 
-# Urdf_sim_tutorial
-See the tutorials over at http://wiki.ros.org/urdf_tutorial<br>
-**Replace package name with 'air_hockey_robot' when run command**
-
 # For air hockey pusher
 ```
 cd ~/catkin_ws/src/air_hockey_robot
 roslaunch air_hockey_robot gazebo.launch model:=urdf/pusher.urdf.xacro
 ```
+# Urdf_sim_tutorial
+See the tutorials over at http://wiki.ros.org/urdf_tutorial<br>
+**Replace package name with 'air_hockey_robot' when run command**
 
