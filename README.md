@@ -33,16 +33,20 @@ catkin_make
 roslaunch hockey_robot_description hockey_robot_rviz.launch
 ```
 Robot structure is built in hockey_robot_description/urdf/hockey_robot.xacro.Please refer [Tutorial: Using a URDF in Gazebo](http://gazebosim.org/tutorials/?tut=ros_urdf) to understand how to build robot with xml file. </br>
+![Rviz preview](/src/rviz_preview.png)
+
 
 ## 2.View and control robot in Gazebo
 ```
 roslaunch hockey_robot_gazebo air_hockey.launch
 ```
+![Gazebo preview](/src/gazebo_launch.png)
 Open a new terminal
 ```
 rqt
 ```
-Then click <strong>Plugins->Image View</strong>
+Then click <strong>Plugins->Image View</strong>, click <strong>Introsepction->Node Graph</strong>
+![rqt gui](/src/rqt_gui.png)
 
 ## 3.Control robot with simlpe python
 [Controller_1](/hockey_robot_gazebo/scripts/controller_1.py)
