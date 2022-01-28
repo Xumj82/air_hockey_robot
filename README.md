@@ -60,10 +60,10 @@ List topics:
 rostopic list
 ```
 Result should like below when run robot in gazebo.</br>
-/hockey_robot/joint1_position_controller/command : topic to control track forward/backward
-/hockey_robot/joint2_position_controller/command : topic to control track left/right
-/hockey_robot/joint3_position_controller/command : topic to control track forward/backward
-/hockey_robot/joint4_position_controller/command : topic to control track left/right
+/hockey_robot/joint1_position_controller/command : topic to control track forward/backward</br>
+/hockey_robot/joint2_position_controller/command : topic to control track left/right</br>
+/hockey_robot/joint3_position_controller/command : topic to control track forward/backward</br>
+/hockey_robot/joint4_position_controller/command : topic to control track left/right</br>
 
 ```
 /clock
