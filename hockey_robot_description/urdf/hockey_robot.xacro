@@ -37,6 +37,7 @@
         <mesh filename="package://hockey_robot_description/meshes/hockeytable.dae"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.46 -0.7 -0.8"/>
+      <contact_coefficients mu="0" resitution="0" k_p="100" k_d="0" />
     </collision>
     <inertial>
       <mass value="80"/>

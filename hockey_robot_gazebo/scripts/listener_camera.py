@@ -36,7 +36,7 @@
 ## Simple talker demo that listens to std_msgs/Strings published 
 ## to the 'chatter' topic
 
-import numpy
+import numpy as np
 from sympy import im
 import rospy
 from std_msgs.msg import String
@@ -45,7 +45,7 @@ from cv_bridge import CvBridge
 
 import cv2
 
-def create_blob_detector(roi_size=(128, 128), blob_min_area=3, 
+def create_blob_detector(roi_size=(128, 128), blob_min_area=20, 
                          blob_min_int=.5, blob_max_int=.95, blob_th_step=10):
     params = cv2.SimpleBlobDetector_Params()
     params.filterByArea = True
@@ -65,19 +65,20 @@ def create_blob_detector(roi_size=(128, 128), blob_min_area=3,
     else:
         return cv2.SimpleBlobDetector_create(params)
 
-def hockey_detection(img:numpy.ndarray,roi_size=(128, 128),blob_min_area=3):
-    params = cv2.SimpleBlobDetector_Params()
-    params.filterByArea = True
-    params.minArea = blob_min_area
-    params.maxArea = roi_size[0]*roi_size[1]
+def hockey_detection(img:np.ndarray):
+    detector = create_blob_detector()
+    keypoints = detector.detect(img)
+    im_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (255,0,0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    return im_with_keypoints
 
 def callback(data : Image):
     # print(data.header)
     if data.header.seq % 300 == 0:
+        print(data.header.seq)
         img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
-        print (type(img))
-        # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
-        # cv2.imwrite(filename, img)
+        keypoint = hockey_detection(img)
+        filename = '{}{}.jpg'.format(save_dir,data.header.seq)
+        cv2.imwrite(filename, img)
     
     # rospy.loginfo(rospy.get_caller_id() + 'position: %s', data.position)
 
