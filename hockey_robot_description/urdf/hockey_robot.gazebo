@@ -11,6 +11,28 @@
 
   <!-- Link1 -->
   <gazebo reference="base_link">
+     <collision>
+        <surface>
+          <bounce>
+            <restitution_coefficient>1</restitution_coefficient>
+            <threshold>1</threshold>
+          </bounce>
+          <contact>
+            <ode>
+              <kp>5000.0</kp>
+              <kd>0.001</kd>
+              <max_vel>10</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu> 
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
   </gazebo>
 
   <!-- Link2 -->
@@ -41,11 +63,88 @@
 
   <!-- camera_link -->
   <gazebo reference="camera_link">
+      <collision>
+        <surface>
+          <bounce>
+            <restitution_coefficient>1</restitution_coefficient>
+            <threshold>1</threshold>
+          </bounce>
+          <contact>
+            <ode>
+              <kp>5000.0</kp>
+              <kd>0.001</kd>
+              <max_vel>10</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu> 
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
     <mu1>0.2</mu1>
     <mu2>0.2</mu2>
     <material>Gazebo/Red</material>
   </gazebo>
 
+  <gazebo reference="sonar_1">
+      <collision>
+        <surface>
+          <bounce>
+            <restitution_coefficient>1</restitution_coefficient>
+            <threshold>1</threshold>
+          </bounce>
+          <contact>
+            <ode>
+              <kp>5000.0</kp>
+              <kd>0.001</kd>
+              <max_vel>10</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu> 
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Red</material>
+  </gazebo>
+
+  <gazebo reference="sonar_2">
+      <collision>
+        <surface>
+          <bounce>
+            <restitution_coefficient>1</restitution_coefficient>
+            <threshold>1</threshold>
+          </bounce>
+          <contact>
+            <ode>
+              <kp>5000.0</kp>
+              <kd>0.01</kd>
+              <max_vel>10</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu> 
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+    <material>Gazebo/Red</material>
+  </gazebo>
 
   <!-- camera -->
   <gazebo reference="camera_link">
@@ -95,4 +194,79 @@
     </sensor>
   </gazebo>
 
+  <!-- Sonar-->
+  <gazebo reference='sonar_1'>
+    <sensor type="ray" name="sonar">
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>30</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1.0</resolution>
+            <min_angle>-0.01</min_angle>
+            <max_angle>0.01</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.01</min_angle>
+            <max_angle>0.01</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.01</min>
+          <max>0.3</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+        <gaussianNoise>0.005</gaussianNoise>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>5</updateRate>
+        <topicName>/hockey_robot/laser/sonar_1</topicName>
+        <frameName>sonar_1</frameName>
+        <fov>0.5</fov>
+        <radiation>ultrasound</radiation>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <gazebo reference='sonar_2'>
+    <sensor type="ray" name="sonar">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>30</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>5</samples>
+            <resolution>1.0</resolution>
+            <min_angle>-0.01</min_angle>
+            <max_angle>0.01</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>5</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.01</min_angle>
+            <max_angle>0.01</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.01</min>
+          <max>0.3</max>
+          <resolution>0.01</resolution>
+        </range>
+      </ray>
+      <plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
+        <gaussianNoise>0.005</gaussianNoise>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>5</updateRate>
+        <topicName>/hockey_robot/laser/sonar_2</topicName>
+        <frameName>sonar_2</frameName>
+        <fov>0.5</fov>
+        <radiation>ultrasound</radiation>
+      </plugin>
+    </sensor>
+  </gazebo>
 </robot>

@@ -8,8 +8,13 @@
   <xacro:property name="tackers_height" value="0.1" />
   <xacro:property name="camera_height" value="1.5" /> <!-- Link 3 -->
   <xacro:property name="camera_link" value="0.05" /> <!-- Size of square 'camera' box -->
+  <xacro:property name="sonar_length" value="0.07" /> 
+  <xacro:property name="sonar_width" value="0.01" /> 
+  <xacro:property name="sonar_height" value="0.02" /> 
+  <xacro:property name="sonar_link" value="0.1" /> 
   <xacro:property name="pusher_height" value="0.02" /> <!-- Space btw top of beam and the each joint -->
   <xacro:property name="pusher_radius" value="0.045" />
+
   <!-- Import all Gazebo-customization elements, including Gazebo colors -->
   <xacro:include filename="$(find hockey_robot_description)/urdf/hockey_robot.gazebo" />
   <!-- Import Rviz colors -->
@@ -27,17 +32,16 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="package://hockey_robot_description/meshes/hockeytable.dae"/>
+        <mesh filename="package://hockey_robot_description/meshes/hockeytablev2.dae"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.46 -0.7 -0.8"/>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://hockey_robot_description/meshes/hockeytable.dae"/>
+        <mesh filename="package://hockey_robot_description/meshes/hockeytablev2.dae"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.46 -0.7 -0.8"/>
-      <contact_coefficients mu="0" resitution="0" k_p="100" k_d="0" />
     </collision>
     <inertial>
       <mass value="80"/>
@@ -51,14 +55,14 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-	<box size="${camera_link} ${camera_link} ${camera_link}"/>
+	      <box size="${camera_link} ${camera_link} ${camera_link}"/>
       </geometry>
     </collision>
 
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-	<box size="${camera_link} ${camera_link} ${camera_link}"/>
+	      <box size="${camera_link} ${camera_link} ${camera_link}"/>
       </geometry>
       <material name="white"/>
     </visual>
@@ -76,6 +80,67 @@
     <origin xyz="0 0 ${camera_height}" rpy="0 ${pi/2} 0"/>
     <parent link="base_link"/>
     <child link="camera_link"/>
+  </joint>
+
+  <!-- Sonar -->
+  <link name="sonar_1">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	      <box size="${sonar_width} ${sonar_length} ${sonar_height}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	      <box size="${sonar_width} ${sonar_length} ${sonar_height}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_1_joint" type="fixed">
+    <axis xyz="0 0 0" />
+    <!--rigin xyz="0 1 ${height3 - axel_offset*2}" rpy="0 0 0"/-->
+    <origin xyz="-0.15 -0.95 ${sonar_height/2}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="sonar_1"/>
+  </joint>
+
+  <link name="sonar_2">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	      <box size="${sonar_width} ${sonar_length} ${sonar_height}"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+	      <box size="${sonar_width} ${sonar_length} ${sonar_height}"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+  <joint name="sonar_2_joint" type="fixed">
+    <axis xyz="0 0 0" />
+    <!--rigin xyz="0 1 ${height3 - axel_offset*2}" rpy="0 0 0"/-->
+    <origin xyz="0.15 0.95 ${sonar_height/2}" rpy="0 0 ${pi}"/>
+    <parent link="base_link"/>
+    <child link="sonar_2"/>
   </joint>
 
   <!-- generate an optical frame http://www.ros.org/reps/rep-0103.html#suffix-frames
@@ -219,7 +284,7 @@
     </actuator>
   </transmission>
   
-    <transmission name="tran3">
+  <transmission name="tran3">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="base_to_horizon_track_2">
       <hardwareInterface>EffortJointInterface</hardwareInterface>
