@@ -44,41 +44,124 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
 import cv2
+microsecond_between_each_frame = 30
 
-def create_blob_detector(roi_size=(128, 128), blob_min_area=20, 
-                         blob_min_int=.5, blob_max_int=.95, blob_th_step=10):
-    params = cv2.SimpleBlobDetector_Params()
-    params.filterByArea = True
-    params.minArea = blob_min_area
-    params.maxArea = roi_size[0]*roi_size[1]
-    params.filterByCircularity = False
-    params.filterByColor = False
-    params.filterByConvexity = False
-    params.filterByInertia = False
-    # blob detection only works with "uint8" images.
-    params.minThreshold = int(blob_min_int*255)
-    params.maxThreshold = int(blob_max_int*255)
-    params.thresholdStep = blob_th_step
-    ver = (cv2.__version__).split('.')
-    if int(ver[0]) < 3:
-        return cv2.SimpleBlobDetector(params)
+class predicter():
+    def __init__(self):
+        self.time_stamp = 0
+        self.ball_location_y = 0
+        self.ball_location_x = 0
+        self.last_time_stamp = 0
+        self.last_location_y = 0
+        self.last_location_x = 0
+        self.prediction = {}
+        self.mistake_range = 2
+
+        #for now i don't know the a number, so the result must be wrong
+        self.y_top = 310.5
+        self.y_down = 704.5
+        self.x_speed = 0
+        self.y_speed = 0
+        self.x_pending = 0
+        self.x_pending = 0
+        self.time_range = 30
+        #x = x_speed*t + x_pending+a*t*t/2
+        #y = y_speed*t + y_pending+a*t*t/2
+    def set_current_status(self,x,y,time_stamp):
+        print("start_setting_points")
+        self.last_time_stamp = self.time_stamp
+        self.time_stamp = int(time_stamp)
+        self.last_location_x = self.ball_location_x
+        self.last_location_y = self.ball_location_y
+        self.ball_location_x = x
+        self.ball_location_y = y
+        return self.predict()
+    
+    def build_new_predict(self):
+        self.x_speed = (self.ball_location_x - self.last_location_x)/(self.time_stamp-self.last_time_stamp)
+        self.x_pending = self.ball_location_x - self.x_speed*self.time_stamp
+        self.y_speed = (self.ball_location_y - self.last_location_y)/(self.time_stamp-self.last_time_stamp)
+        self.y_pending = self.ball_location_y - self.y_speed*self.time_stamp
+        self.prediction = {self.time_stamp:[self.ball_location_x,self.ball_location_y]}
+        self.continue_predict()
+
+    def regular_y(self,y):
+        while self.y_top > y or self.y_down < y:
+            if y > self.y_down:
+                y = 2*self.y_down - y
+            elif y < self.y_top:
+                y = 2*self.y_top - y
+        return y
+    def continue_predict(self):
+        predicted = len(self.prediction.keys())
+        while predicted <= self.time_range:
+            target_time_stamp = self.time_stamp + predicted*microsecond_between_each_frame
+            self.prediction[target_time_stamp] = [self.prediction[self.time_stamp][0]+self.x_speed*predicted*microsecond_between_each_frame,self.regular_y(self.prediction[self.time_stamp][1]+self.y_speed*predicted*microsecond_between_each_frame)]
+            predicted+=1
+    
+    def predict(self):
+        if self.time_stamp in self.prediction.keys():
+            if abs(self.ball_location_x - self.prediction[self.time_stamp][0]) <= self.mistake_range and abs(self.ball_location_y - self.prediction[self.time_stamp][1]) <= self.mistake_range:
+                for time_key in list(self.prediction):
+                    if time_key < self.time_stamp:
+                        self.prediction.pop(time_key)
+                if len(self.prediction.keys()) >= self.time_range*2/3:
+                    return self.prediction
+                else:
+                    self.continue_predict()
+                    return self.prediction
+        self.build_new_predict()
+        return self.prediction
+
+
+default_predicter = predicter()
+                
+
+def detect_coordinates_of_red_balls(img):
+    img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
+
+    lower_red = np.array([0,50,50])
+    upper_red = np.array([10,255,255])
+    mask0 = cv2.inRange(img_hsv,lower_red, upper_red)
+
+    lower_red = np.array([170,50,50])
+    upper_red = np.array([180,255,255])
+    mask1 = cv2.inRange(img_hsv,lower_red, upper_red)
+
+    mask = mask0+mask1
+    #1 locate the ball
+    img[np.where(mask==0)] = 0
+    img[444:575,101:125,:] = 0
+    img[444:575,890:925,:] = 0
+    img = cv2.medianBlur(img,15)
+    img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+    circles = cv2.HoughCircles(img_gray,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=15,maxRadius=25)
+    # print(circles)
+    if circles is not None:
+        x = circles[0][0][0]
+        y = circles[0][0][1]
+        return True,x,y
     else:
-        return cv2.SimpleBlobDetector_create(params)
-
-def hockey_detection(img:np.ndarray):
-    detector = create_blob_detector()
-    keypoints = detector.detect(img)
-    im_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (255,0,0), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    return im_with_keypoints
+        return False,0,0
 
 def callback(data : Image):
-    # print(data.header)
-    if data.header.seq % 300 == 0:
+    # print(data.header.stamp)
+    if data.header.seq % microsecond_between_each_frame == 0:
         print(data.header.seq)
         img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
-        keypoint = hockey_detection(img)
-        filename = '{}{}.jpg'.format(save_dir,data.header.seq)
-        cv2.imwrite(filename, img)
+        # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
+        # cv2.imwrite(filename, img)
+        # # img = cv2.
+        # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
+        # cv2.imwrite(filename, img)
+        detected,x,y = detect_coordinates_of_red_balls(img)
+        if not detected:
+            return
+        # print(data.header.seq)
+        prediction = default_predicter.set_current_status(x,y,data.header.seq)
+        print(prediction)
+        #here suppose to call the actuall function of policy
+        return
     
     # rospy.loginfo(rospy.get_caller_id() + 'position: %s', data.position)
 
@@ -92,13 +175,12 @@ def listener():
     rospy.init_node('listener', anonymous=True)
 
     rospy.Subscriber('/hockey_robot/camera1/image_raw', Image, callback)
-
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
 
 if __name__ == '__main__':
     # f = open("demofile3.txt", "w")
-    save_dir = '/home/xumingjie/catkin_ws/src/air_hockey_robot/hockey_robot_gazebo/scripts/'
+    # save_dir = '/home/futong/catkin_ws/src/air_hockey_robot/hockey_robot_gazebo/scripts'
     bridge = CvBridge()
     listener()
     # f.close()
