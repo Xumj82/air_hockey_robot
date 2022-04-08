@@ -36,11 +36,17 @@
 ## Simple talker demo that listens to std_msgs/Strings published 
 ## to the 'chatter' topic
 
+from sympy import im
 import rospy
 from std_msgs.msg import String
+from sensor_msgs.msg import JointState
+import json
 
 def callback(data):
-    rospy.loginfo(rospy.get_caller_id() + 'I heard %s', data.data)
+    # print(data)
+    pred_res = json.loads(data)
+    print(pred_res)
+    # rospy.loginfo(rospy.get_caller_id() + 'position: %s', data.position)
 
 def listener():
 
@@ -51,7 +57,7 @@ def listener():
     # run simultaneously.
     rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber('chatter', String, callback)
+    rospy.Subscriber("/hockey_robot/predicter/pred_res", String, callback)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

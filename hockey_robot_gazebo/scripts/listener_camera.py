@@ -37,14 +37,16 @@
 ## to the 'chatter' topic
 
 import numpy as np
-from sympy import im
 import rospy
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 
+import json
+import pickle
 import cv2
 microsecond_between_each_frame = 30
+
 
 class predicter():
     def __init__(self):
@@ -67,6 +69,7 @@ class predicter():
         self.time_range = 30
         #x = x_speed*t + x_pending+a*t*t/2
         #y = y_speed*t + y_pending+a*t*t/2
+
     def set_current_status(self,x,y,time_stamp):
         print("start_setting_points")
         self.last_time_stamp = self.time_stamp
@@ -82,7 +85,7 @@ class predicter():
         self.x_pending = self.ball_location_x - self.x_speed*self.time_stamp
         self.y_speed = (self.ball_location_y - self.last_location_y)/(self.time_stamp-self.last_time_stamp)
         self.y_pending = self.ball_location_y - self.y_speed*self.time_stamp
-        self.prediction = {self.time_stamp:[self.ball_location_x,self.ball_location_y]}
+        self.prediction = {self.time_stamp:[float(self.ball_location_x), float(self.ball_location_y)]}
         self.continue_predict()
 
     def regular_y(self,y):
@@ -92,6 +95,7 @@ class predicter():
             elif y < self.y_top:
                 y = 2*self.y_top - y
         return y
+
     def continue_predict(self):
         predicted = len(self.prediction.keys())
         while predicted <= self.time_range:
@@ -159,6 +163,9 @@ def callback(data : Image):
             return
         # print(data.header.seq)
         prediction = default_predicter.set_current_status(x,y,data.header.seq)
+        # pred_res = str(pickle.dumps(prediction))
+        pred_res = json.dumps(prediction)
+        pred_publisher.publish(pred_res)
         print(prediction)
         #here suppose to call the actuall function of policy
         return
@@ -172,10 +179,13 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    rospy.init_node('listener', anonymous=True)
+    global pred_publisher
 
+    rospy.init_node('path_predictor', anonymous=True)
+    pred_publisher = rospy.Publisher('/hockey_robot/predicter/pred_res', String, queue_size=10)
     rospy.Subscriber('/hockey_robot/camera1/image_raw', Image, callback)
     # spin() simply keeps python from exiting until this node is stopped
+    
     rospy.spin()
 
 if __name__ == '__main__':

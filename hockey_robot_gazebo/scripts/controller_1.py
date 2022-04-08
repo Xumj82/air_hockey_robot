@@ -38,24 +38,22 @@
 
 import rospy
 from std_msgs.msg import Float64
+from sensor_msgs.msg import Joy
+
+def callback(data):
+    print(data.axes[1],data.axes[0])
+    tracker_pub.publish(data.axes[1])
+    pusher_pub.publish(-data.axes[3])
 
 def talker():
-    pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
-    rospy.init_node('talker', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
-    cmd = 0
-    while not rospy.is_shutdown():
-        track_dir = input("Up w down s:")
-        if track_dir == 'w':
-            cmd = cmd+0.1
-        if track_dir == 's':
-            cmd = cmd-0.1
-        if track_dir =='q':
-            cmd = 0
-            break
-        # rospy.loginfo(hello_str)
-        pub.publish(cmd)
-        rate.sleep()
+    global tracker_pub
+    global pusher_pub
+    tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
+    pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
+    rospy.Subscriber("joy", Joy, callback)
+
+    rospy.init_node('Joy2Pusher', anonymous=True)
+    rospy.spin()
 
 if __name__ == '__main__':
     try:
