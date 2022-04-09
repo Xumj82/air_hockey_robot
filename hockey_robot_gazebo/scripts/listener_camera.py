@@ -41,11 +41,13 @@ import rospy
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
+import time
 
 import json
-import pickle
+# import pickle
 import cv2
-microsecond_between_each_frame = 30
+# from .planner import plan_strategy
+microsecond_between_each_frame = 200
 
 
 class predicter():
@@ -71,6 +73,8 @@ class predicter():
         #y = y_speed*t + y_pending+a*t*t/2
 
     def set_current_status(self,x,y,time_stamp):
+        if self.last_time_stamp == time_stamp:
+            return self.prediction
         print("start_setting_points")
         self.last_time_stamp = self.time_stamp
         self.time_stamp = int(time_stamp)
@@ -122,6 +126,9 @@ default_predicter = predicter()
                 
 
 def detect_coordinates_of_red_balls(img):
+    img = cv2.rotate(img, cv2.ROTATE_180)
+    # filename = '{}{}.jpg'.format(save_dir,0)
+    # cv2.imwrite(filename, img)
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
     lower_red = np.array([0,50,50])
@@ -148,10 +155,20 @@ def detect_coordinates_of_red_balls(img):
     else:
         return False,0,0
 
+def convert_image_coordinate_into_actual(prediction):
+    for coordinates in prediction.values():
+        x = coordinates[0]
+        y = coordinates[1]
+        coordinates[0] = 0.0024571*x - 0.3931429
+        coordinates[1] = 0.0025445*y - 1.3066175
+    return prediction
+
 def callback(data : Image):
     # print(data.header.stamp)
-    if data.header.seq % microsecond_between_each_frame == 0:
-        print(data.header.seq)
+    current_time = int(time.time()*100)
+    if current_time % microsecond_between_each_frame <= microsecond_between_each_frame//10:
+        current_time = microsecond_between_each_frame*(current_time//microsecond_between_each_frame)
+        print(current_time)
         img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
         # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
         # cv2.imwrite(filename, img)
@@ -162,11 +179,13 @@ def callback(data : Image):
         if not detected:
             return
         # print(data.header.seq)
-        prediction = default_predicter.set_current_status(x,y,data.header.seq)
-        # pred_res = str(pickle.dumps(prediction))
-        pred_res = json.dumps(prediction)
-        pred_publisher.publish(pred_res)
+        prediction = default_predicter.set_current_status(x,y,current_time)
+        # # pred_res = str(pickle.dumps(prediction))
+        # pred_res = json.dumps(prediction)
+        # pred_publisher.publish(pred_res)
+        prediction = convert_image_coordinate_into_actual(prediction)
         print(prediction)
+        # plan_strategy(prediction)
         #here suppose to call the actuall function of policy
         return
     
@@ -179,10 +198,11 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
-    global pred_publisher
+    rospy.init_node('listener', anonymous = True)
+    # global pred_publisher
 
-    rospy.init_node('path_predictor', anonymous=True)
-    pred_publisher = rospy.Publisher('/hockey_robot/predicter/pred_res', String, queue_size=10)
+    # rospy.init_node('path_predictor', anonymous=True)
+    # pred_publisher = rospy.Publisher('/hockey_robot/predicter/pred_res', String, queue_size=10)
     rospy.Subscriber('/hockey_robot/camera1/image_raw', Image, callback)
     # spin() simply keeps python from exiting until this node is stopped
     
