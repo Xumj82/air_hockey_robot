@@ -46,7 +46,7 @@ import time
 import json
 # import pickle
 import cv2
-# from .planner import plan_strategy
+from .planner import plan_strategy
 microsecond_between_each_frame = 200
 
 
@@ -184,8 +184,8 @@ def callback(data : Image):
         # pred_res = json.dumps(prediction)
         # pred_publisher.publish(pred_res)
         prediction = convert_image_coordinate_into_actual(prediction)
-        print(prediction)
-        # plan_strategy(prediction)
+        # print(prediction)
+        plan_strategy(prediction)
         #here suppose to call the actuall function of policy
         return
     
