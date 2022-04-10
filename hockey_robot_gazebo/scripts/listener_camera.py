@@ -46,7 +46,8 @@ import time
 import json
 # import pickle
 import cv2
-from .planner import plan_strategy
+
+from planner import plan_strategy
 microsecond_between_each_frame = 200
 
 

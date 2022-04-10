@@ -73,9 +73,9 @@ def strategy_2(predict_data:dict):
 def strategy_3(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
         if hockey_pos[0]<=0.50:
-            cur_time = time.time()
+            cur_time = time.time()*100
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
-            duration = cur_time - pre_time - 0.5
+            duration = cur_time - pre_time - 50
             rospy.sleep(duration)
             print('go to defence position (%0.2f,%0.2f)'%(defence_position_x,defence_position_y))
             setPusher1_position(defence_position_y)
@@ -137,8 +137,8 @@ def plan_strategy(data:dict):
     # run simultaneously.
 
     # 0-0.86 is from left to mid for joint_1.
-    # 0.5~0 is from top to mid for joint_2.
-    # 0~-0.5 is from top to mid for joint_2.
+    # -0.5~0 is from top to mid for joint_2.
+    # 0~0.5 is from mid to bot for joint_2.
 
     global tracker_pub
     global pusher_pub
@@ -159,10 +159,11 @@ def plan_strategy(data:dict):
     tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
 
-    rospy.init_node('planner', anonymous=True)
+    # rospy.init_node('planner', anonymous=True)
 
     #step 1:check if need plan:
     try:
+        print('plan start')
         if not check_plan(predict_data):
             print('No need to plan')
             reset_position()
@@ -173,14 +174,20 @@ def plan_strategy(data:dict):
 
             if default_strategy <= 1:
                 if check_strategy_1(predict_data):
+                    print('plan start strategy_1')
                     strategy_1(predict_data)
                 else:
                     # strategy_1 can not use
                     print ('Defence strategy(strategy1) is not suit')
+                    return
             elif default_strategy == 2:
+                print('plan start strategy_2')
                 strategy_2(predict_data)
+                return
             else:
+                print('plan start strategy_3')
                 strategy_3(predict_data)
+                return
     except:
         print('planner unknown error')
 
