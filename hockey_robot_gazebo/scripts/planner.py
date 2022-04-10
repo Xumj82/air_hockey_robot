@@ -176,6 +176,7 @@ def plan_strategy(data:dict):
                 if check_strategy_1(predict_data):
                     print('plan start strategy_1')
                     strategy_1(predict_data)
+                    return
                 else:
                     # strategy_1 can not use
                     print ('Defence strategy(strategy1) is not suit')
