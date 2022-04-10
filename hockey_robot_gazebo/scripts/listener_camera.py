@@ -192,8 +192,7 @@ def plan_strategy(data:dict):
         if check_hockey_static(predict_data):
             print('strategy1 is not suit')
             #check_hockey_position:
-            if list(predict_data.values())[0][0] < 0.86:
-                default_strategy = 2
+            default_strategy = 2
         
         #step 2:strategy choice:
         while not rospy.is_shutdown():
