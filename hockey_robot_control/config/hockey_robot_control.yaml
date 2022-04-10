@@ -12,7 +12,7 @@ hockey_robot:
   joint2_position_controller:
     type: effort_controllers/JointPositionController
     joint: horizon_track_1_to_pusher_1
-    pid: {p: 100.0, i: 0.01, d: 10.0}
+    pid: {p: 10000.0, i: 0.01, d: 10.0}
   joint3_position_controller:
     type: effort_controllers/JointPositionController
     joint: base_to_horizon_track_2

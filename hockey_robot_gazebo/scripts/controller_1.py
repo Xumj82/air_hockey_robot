@@ -39,6 +39,9 @@
 import rospy
 from std_msgs.msg import Float64
 from sensor_msgs.msg import Joy
+import mediapipe as mp
+
+
 
 def callback(data):
     print(data.axes[1],data.axes[0])

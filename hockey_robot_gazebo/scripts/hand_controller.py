@@ -63,8 +63,8 @@ def talker():
     # global tracker_pub
     # global pusher_pub
     global hand_pub
-    tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
-    pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
+    tracker_pub = rospy.Publisher('hockey_robot/joint3_position_controller/command', Float64, queue_size=10)
+    pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
     hand_pub = rospy.Publisher('/hockey_robot/hand_controller/hand', Image, queue_size=10)
 
     rospy.init_node('hand_controller', anonymous=True)
@@ -78,7 +78,7 @@ def talker():
         hand = get_hand_position(cap)
         if hand:
             x = hand.landmark[mp_hands.HandLandmark.WRIST].x-orgin[0]
-            y = hand.landmark[mp_hands.HandLandmark.WRIST].y-orgin[1]
+            y = (hand.landmark[mp_hands.HandLandmark.WRIST].y-orgin[1])*2
         else:
             x,y = x,y
         tracker_pub.publish(x)

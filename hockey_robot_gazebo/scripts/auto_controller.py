@@ -61,6 +61,7 @@ def aotuactor():
 
     tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
+    
     rospy.init_node('autopusher', anonymous=True)
 
     rospy.Subscriber("/hockey_robot/predicter/pred_res", String, callback)
