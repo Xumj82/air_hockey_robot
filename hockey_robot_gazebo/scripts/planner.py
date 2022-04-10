@@ -65,6 +65,7 @@ def strategy_2(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
         if hockey_pos[0]<=0.50:
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
+            print('go to defence position (%0.2f,%0.2f)'%(defence_position_x,defence_position_y))
             setPusher1_position(defence_position_y)
             setTrack1_position(defence_position_x)
 
@@ -76,6 +77,7 @@ def strategy_3(predict_data:dict):
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
             duration = cur_time - pre_time - 0.5
             rospy.sleep(duration)
+            print('go to defence position (%0.2f,%0.2f)'%(defence_position_x,defence_position_y))
             setPusher1_position(defence_position_y)
             setTrack1_position(defence_position_x)
 
