@@ -48,7 +48,7 @@ import json
 import cv2
 
 from planner import plan_strategy
-microsecond_between_each_frame = 200
+microsecond_between_each_frame = 10
 
 
 class predicter():
@@ -76,7 +76,11 @@ class predicter():
     def set_current_status(self,x,y,time_stamp):
         if self.last_time_stamp == time_stamp:
             return self.prediction
-        print("start_setting_points")
+        # else:
+        #     print(self.last_time_stamp)
+        #     print(time_stamp)
+        #     print("#########################")
+        # print("start_setting_points")
         self.last_time_stamp = self.time_stamp
         self.time_stamp = int(time_stamp)
         self.last_location_x = self.ball_location_x
@@ -161,15 +165,17 @@ def convert_image_coordinate_into_actual(prediction):
         x = coordinates[0]
         y = coordinates[1]
         coordinates[0] = 0.0024571*x - 0.3931429
-        coordinates[1] = 0.0025445*y - 1.3066175
+        coordinates[1] = 0.0025445*y - 1.3096175
     return prediction
 
 def callback(data : Image):
     # print(data.header.stamp)
-    current_time = int(time.time()*100)
-    if current_time % microsecond_between_each_frame <= microsecond_between_each_frame//10:
-        current_time = microsecond_between_each_frame*(current_time//microsecond_between_each_frame)
+    current_time = data.header.seq
+    if current_time % microsecond_between_each_frame == 0:
         print(current_time)
+        # print(time.time())
+        # current_time = microsecond_between_each_frame*(current_time//microsecond_between_each_frame)
+        # print(current_time)
         img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
         # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
         # cv2.imwrite(filename, img)
@@ -184,8 +190,11 @@ def callback(data : Image):
         # # pred_res = str(pickle.dumps(prediction))
         # pred_res = json.dumps(prediction)
         # pred_publisher.publish(pred_res)
-        prediction = convert_image_coordinate_into_actual(prediction)
         # print(prediction)
+        # print("++++++++++++++++++++++++++++++++")
+        prediction = convert_image_coordinate_into_actual(prediction)
+        print(prediction)
+        print("++++++++++++++++++++++++++++++++")
         plan_strategy(prediction)
         #here suppose to call the actuall function of policy
         return
