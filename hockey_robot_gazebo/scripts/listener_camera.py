@@ -56,6 +56,8 @@ microsecond_between_each_frame = 10
 
 ## region
 
+## Planner
+
 def check_strategy_1(predict_data:dict):
     hockey_position_list = list(predict_data.values())
     if hockey_position_list[-1][0]<0:
@@ -121,7 +123,7 @@ def check_hockey_direction(predict_data):
     hocky_x_list=[]
     for i in hockey_position_list:
         hocky_x_list.append(i[0])
-    if hocky_x_list[-1]>=hocky_x_list[0]:
+    if hocky_x_list[-1]>hocky_x_list[0]:
         return False
     return True
 
