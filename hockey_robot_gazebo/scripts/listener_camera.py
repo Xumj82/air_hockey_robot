@@ -76,7 +76,7 @@ def strategy_1(predict_data:dict):
     
 def strategy_2(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
-        if hockey_pos[0]<=0.50:
+        if hockey_pos[0]<=0.86:
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
             print('go to defence position (%0.2f,%0.2f)'%(defence_position_x,defence_position_y))
             setPusher1_position(defence_position_y)
@@ -85,7 +85,7 @@ def strategy_2(predict_data:dict):
 
 def strategy_3(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
-        if hockey_pos[0]<=0.50:
+        if hockey_pos[0]<=0.86:
             cur_time = time.time()*100
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
             duration = cur_time - pre_time - 50
@@ -104,23 +104,28 @@ def reset_position():
     pusher_pub.publish(0)
     tracker_pub.publish(0)
 
-def check_plan(predict_data):
-
+def check_hockey_static(predict_data):
     hockey_position_list = predict_data.values()
     hocky_x_list=[]
     for i in hockey_position_list:
         hocky_x_list.append(i[0])
-
-    if hocky_x_list[-1]>=hocky_x_list[0]:
-        return False
-    
     move_dis=0
     for i in range(1,len(hocky_x_list)):
         move_dis += abs(hocky_x_list[i]-hocky_x_list[i-1])
-
     if move_dis <=0.1:
         return False
     return True
+
+def check_hockey_direction(predict_data):
+    hockey_position_list = predict_data.values()
+    hocky_x_list=[]
+    for i in hockey_position_list:
+        hocky_x_list.append(i[0])
+    if hocky_x_list[-1]>=hocky_x_list[0]:
+        return False
+    return True
+
+
 
 
 
@@ -177,10 +182,16 @@ def plan_strategy(data:dict):
     #step 1:check if need plan:
     try:
         print('plan start')
-        if not check_plan(predict_data):
+        if not check_hockey_direction(predict_data):
             print('No need to plan')
             reset_position()
             return
+        
+        if check_hockey_static(predict_data):
+            print('strategy1 is not suit')
+            #check_hockey_position:
+            if list(predict_data.values())[0][0] < 0.86:
+                default_strategy = 2
         
         #step 2:strategy choice:
         while not rospy.is_shutdown():
