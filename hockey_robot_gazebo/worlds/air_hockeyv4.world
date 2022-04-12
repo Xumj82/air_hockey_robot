@@ -69,7 +69,7 @@
     </light>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose>0.51216 -0.376634 3.77202 0 1.35779 2.78422</pose>
+        <pose>0.014632 -0.210878 3.90251 0 1.5698 3.12422</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -96,6 +96,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
+      <sim_time>0 0</sim_time>
+      <real_time>0 0</real_time>
+      <wall_time>1649596878 545277046</wall_time>
+      <iterations>0</iterations>
       <model name='ground_plane'>
         <pose>0 0 0 0 -0 0</pose>
         <scale>1 1 1</scale>
@@ -107,13 +111,47 @@
         </link>
       </model>
       <model name='hockey'>
-        <pose>0.275908 0.800266 0.855092 1e-05 -7.2e-05 0.564728</pose>
+        <pose>0.005326 0.61748 0.855069 -5.6e-05 -4.7e-05 1.57634</pose>
         <scale>1 1 1</scale>
         <link name='link_0'>
-          <pose>0.290655 0.845631 0.805103 7e-06 -6.7e-05 0.564728</pose>
+          <pose>0.005329 0.617482 0.805077 -5.9e-05 -4.2e-05 1.57634</pose>
           <velocity>9e-06 5e-06 0.005555 7.5e-05 -0.000124 2e-06</velocity>
-          <acceleration>3e-06 2e-06 11.1076 0.035504 -0.140101 -4e-06</acceleration>
-          <wrench>0 0 0.097708 0 -0 0</wrench>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='hockey_robot'>
+        <pose>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='base_link'>
+          <pose>0 0 0.8 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='horizon_track_1'>
+          <pose>0 -0.86 0.9 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='horizon_track_2'>
+          <pose>0 0.86 0.9 0 -0 3.14159</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='pusher_1'>
+          <pose>0 -0.86 0.81 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='pusher_2'>
+          <pose>0 0.86 0.81 0 -0 3.14159</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <light name='sun'>
@@ -156,10 +194,6 @@
             <shader type='pixel'>
               <normal_map>__default__</normal_map>
             </shader>
-            <!-- <ambient>0.3 0.3 0.3 1</ambient>
-            <diffuse>0.7 0.7 0.7 1</diffuse>
-            <specular>0.01 0.01 0.01 1</specular>
-            <emissive>0 0 0 1</emissive> -->
           </material>
           <transparency>0</transparency>
           <cast_shadows>1</cast_shadows>
@@ -207,7 +241,7 @@
                 <kp>10000</kp>
                 <kd>0</kd>
                 <max_vel>10</max_vel>
-                <min_depth>0.00</min_depth>
+                <min_depth>0</min_depth>
               </ode>
               <bullet>
                 <split_impulse>1</split_impulse>
@@ -223,7 +257,7 @@
       </link>
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>0 0 0.855097 0 0 0</pose>
+      <pose>0 0 0.855097 0 -0 0</pose>
     </model>
   </world>
 </sdf>
