@@ -51,10 +51,184 @@ import sys
 # print(sys.path)
 # sys.path.append('scripts')
 # from planner import plan_strategy
+
+
+### global config
+HOCKEY_PATH_LENGTH = 4
+
+STRATEGY_3_SAFE_LINE = 0.4
+STRATEGY_3_ATTACK_LINE = 0.3
+STRATEGY_3_PREPARE_RANGE = 5
+
 microsecond_between_each_frame = 10
 
+default_strategy = 3
+tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
+pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
 
 ## region
+
+## Planner
+
+class planner():
+    def __init__(self):
+        self.predict_data = []
+        self.strategy = default_strategy
+        self.current_target = []
+
+        self.hockey_path = [0,0,0,0]
+
+        self.strategy_1_defence_position = 0
+        self.strategy_2_defence_position_x = 0
+        self.strategy_2_defence_position_y = 0
+
+        self.strategy_3_defence_position_x = 0
+        self.strategy_3_defence_position_y = 0
+
+    #basic tools for operating ros    
+    def setPusher1_position(self,data):
+        pusher_pub.publish(data)
+
+    def setTrack1_position(self,data):
+        tracker_pub.publish(data)
+
+    def reset_position(self):
+        pusher_pub.publish(0)
+        tracker_pub.publish(0)
+    
+    #stategy check and set
+
+    def check_strategy_1(self):
+        hockey_position_list = list(self.predict_data.values())
+        if hockey_position_list[-1][0]<0:
+            return True
+        elif hockey_position_list[-1][0]>0:
+            return False
+    def strategy_1(self):
+        hockey_position_list = list(self.predict_data.values())
+        for i in range(len(hockey_position_list)-1):
+            if hockey_position_list[i][0] >0 and hockey_position_list[i+1][0] <=0 :
+                self.strategy_1_defence_position = (hockey_position_list[i][1] + hockey_position_list[i+1][1])/2
+                print('go to defence position (%0.2f,%0.2f)'%(0,self.strategy_1_defence_position))
+                self.setPusher1_position(self.strategy_1_defence_position)
+                self.setTrack1_position(0)
+    def strategy_2(self):
+        for pre_time,hockey_pos in self.predict_data.items():
+            if hockey_pos[0]<=0.86:
+                self.strategy_2_defence_position_x,self.strategy_2_defence_position_y = hockey_pos[0],hockey_pos[1]
+                print('go to defence position (%0.2f,%0.2f)'%(self.strategy_2_defence_position_x,self.strategy_2_defence_position_y))
+                self.setPusher1_position(self.strategy_2_defence_position_y)
+                self.setTrack1_position(self.strategy_2_defence_position_x-0.05)
+
+
+    def strategy_3(self,same_path):
+        if not same_path:
+            hockey_position_list = list(self.predict_data.values())
+            for i in range(len(hockey_position_list)-1):
+                if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
+                    self.strategy_3_defence_position = (hockey_position_list[i][1] + hockey_position_list[i+1][1])/2
+                    if i <= STRATEGY_3_PREPARE_RANGE:
+                        self.strategy_1()
+                        return
+                    else:
+                        print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
+                        self.setPusher1_position(self.strategy_3_defence_position)
+                        self.setTrack1_position(STRATEGY_3_ATTACK_LINE)
+                        return
+            return
+        else:
+            hockey_position_list = list(self.predict_data.values())
+            for i in range(len(hockey_position_list)-1):
+                if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
+                    if i <= STRATEGY_3_PREPARE_RANGE:
+                        self.setPusher1_position(self.strategy_3_defence_position)
+                        self.setTrack1_position(STRATEGY_3_SAFE_LINE)
+                        return
+                    else:
+                        return
+
+    def check_hockey_static(self):
+        hockey_position_list = self.predict_data.values()
+        hockey_x_list=[]
+        for i in hockey_position_list:
+            hockey_x_list.append(i[0])
+        move_dis=0
+        for i in range(1,len(hockey_x_list)):
+            move_dis += abs(hockey_x_list[i]-hockey_x_list[i-1])
+        if move_dis <=0.1:
+            return True
+        return False
+
+    def check_hockey_direction(self):
+        hockey_position_list = self.predict_data.values()
+        hockey_x_list=[]
+        for i in hockey_position_list:
+            hockey_x_list.append(i[0])
+        if len(hockey_x_list) == 0:
+            return False
+        if hockey_x_list[-1]>hockey_x_list[0]:
+            return False
+        return True
+    
+    def update_hockey_path(self,hockey_path):
+        if len(hockey_path) != HOCKEY_PATH_LENGTH:
+            return False
+        path_difference = 0
+        for i in range(len(hockey_path)):
+            path_difference += abs(self.hockey_path[i]-hockey_path[i])
+        if path_difference <= 1:
+            return True
+        else:
+            self.hockey_path = hockey_path
+            return False
+    
+    def update_prediction(self,prediction,hockey_path):
+        self.predict_data = prediction
+        same_path = self.update_hockey_path(hockey_path)
+        self.plan_strategy(same_path)
+    def plan_strategy(self,same_path):
+
+        #step 1:check if need plan:
+        # try:
+        print('plan start')
+        if not self.check_hockey_direction():
+            print('No need to plan')
+            self.reset_position()
+            return
+        
+        if self.check_hockey_static():
+            print('strategy1 is not suit')
+            #check_hockey_position:
+            self.strategy = 2
+        else:
+            self.strategy = default_strategy
+        
+        #step 2:strategy choice:
+        while not rospy.is_shutdown():
+
+            if self.strategy <= 1:
+                if same_path:
+                    return
+                if self.check_strategy_1():
+                    print('plan start strategy_1')
+                    self.strategy_1()
+                    return
+                else:
+                    # strategy_1 can not use
+                    print ('Error:Defence strategy(strategy1) is not suit')
+                    return
+            elif self.strategy  == 2:
+                print('plan start strategy_2')
+                self.strategy_2()
+                return
+            else:
+                print('plan start strategy_3')
+                self.strategy_3(same_path)
+                return
+        # except:
+        #     print('planner unknown error')
+
+"""
 
 def check_strategy_1(predict_data:dict):
     hockey_position_list = list(predict_data.values())
@@ -76,7 +250,7 @@ def strategy_1(predict_data:dict):
     
 def strategy_2(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
-        if hockey_pos[0]<=0.50:
+        if hockey_pos[0]<=0.86:
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
             print('go to defence position (%0.2f,%0.2f)'%(defence_position_x,defence_position_y))
             setPusher1_position(defence_position_y)
@@ -85,7 +259,7 @@ def strategy_2(predict_data:dict):
 
 def strategy_3(predict_data:dict):
     for pre_time,hockey_pos in predict_data:
-        if hockey_pos[0]<=0.50:
+        if hockey_pos[0]<=0.86:
             cur_time = time.time()*100
             defence_position_x,defence_position_y = hockey_pos[0],hockey_pos[1]
             duration = cur_time - pre_time - 50
@@ -104,23 +278,28 @@ def reset_position():
     pusher_pub.publish(0)
     tracker_pub.publish(0)
 
-def check_plan(predict_data):
-
+def check_hockey_static(predict_data):
     hockey_position_list = predict_data.values()
     hocky_x_list=[]
     for i in hockey_position_list:
         hocky_x_list.append(i[0])
-
-    if hocky_x_list[-1]>=hocky_x_list[0]:
-        return False
-    
     move_dis=0
     for i in range(1,len(hocky_x_list)):
         move_dis += abs(hocky_x_list[i]-hocky_x_list[i-1])
-
     if move_dis <=0.1:
         return False
     return True
+
+def check_hockey_direction(predict_data):
+    hockey_position_list = predict_data.values()
+    hocky_x_list=[]
+    for i in hockey_position_list:
+        hocky_x_list.append(i[0])
+    if hocky_x_list[-1]>hocky_x_list[0]:
+        return False
+    return True
+
+
 
 
 
@@ -163,24 +342,29 @@ def plan_strategy(data:dict):
     # global pusher1_position
 
 
-    default_strategy = 1
+    # default_strategy = 1
 
     
     predict_data = data
 
 
-    tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
-    pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
+    # tracker_pub = rospy.Publisher('hockey_robot/joint1_position_controller/command', Float64, queue_size=10)
+    # pusher_pub = rospy.Publisher('hockey_robot/joint2_position_controller/command', Float64, queue_size=10)
 
     # rospy.init_node('planner', anonymous=True)
 
     #step 1:check if need plan:
     try:
         print('plan start')
-        if not check_plan(predict_data):
+        if not check_hockey_direction(predict_data):
             print('No need to plan')
             reset_position()
             return
+        
+        if check_hockey_static(predict_data):
+            print('strategy1 is not suit')
+            #check_hockey_position:
+            default_strategy = 2
         
         #step 2:strategy choice:
         while not rospy.is_shutdown():
@@ -204,7 +388,7 @@ def plan_strategy(data:dict):
                 return
     except:
         print('planner unknown error')
-
+"""
 
     # rospy.Subscriber('/hockey_robot/joint_states', JointState, callback)
 
@@ -285,10 +469,11 @@ class predicter():
                     self.continue_predict()
                     return self.prediction
         self.build_new_predict()
-        return self.prediction
+        return self.prediction,[self.x_speed,self.y_speed,self.x_pending,self.y_pending]
 
 
 default_predicter = predicter()
+default_planner = planner()
                 
 
 def detect_coordinates_of_red_balls(img):
@@ -347,7 +532,7 @@ def callback(data : Image):
         if not detected:
             return
         # print(data.header.seq)
-        prediction = default_predicter.set_current_status(x,y,current_time)
+        prediction, hockey_path = default_predicter.set_current_status(x,y,current_time)
         # # pred_res = str(pickle.dumps(prediction))
         # pred_res = json.dumps(prediction)
         # pred_publisher.publish(pred_res)
@@ -356,7 +541,7 @@ def callback(data : Image):
         prediction = convert_image_coordinate_into_actual(prediction)
         print(prediction)
         print("++++++++++++++++++++++++++++++++")
-        plan_strategy(prediction)
+        default_planner.update_prediction(prediction,hockey_path)
         #here suppose to call the actuall function of policy
         return
     
