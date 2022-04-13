@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 
-
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64
 
+import os
 import cv2 as cv
 import copy
 import itertools
 import mediapipe as mp
+
+import sys
+# print(sys.path)
+
 import numpy as np
 import tensorflow as tf
 
@@ -104,7 +108,11 @@ def pre_process_point_history(image, point_history):
 
     return temp_point_history
 
-def get_hand_position(cap):
+def get_hand_position(cap,orgin,
+                        radius = 0.1,
+                        color = (0, 0, 255),
+                        thickness =1 
+):
     with mp_hands.Hands(
         model_complexity=0,
         min_detection_confidence=0.5,
@@ -127,6 +135,9 @@ def get_hand_position(cap):
         image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
         image_hight, image_width, _ = image.shape
         
+        orgin = (int(image_width*orgin[0]), int(image_hight*orgin[1]))
+        radius = int( min(image_hight, image_width) * radius)
+
         x,y = -1,-1
         hand_0 = None
         hand_sign_id = None
@@ -156,6 +167,8 @@ def get_hand_position(cap):
                 landmark_list)
             hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
             # rospy.loginfo('hand_sign:'+hand_sign_id)
+
+            image = cv.circle(image, orgin, radius, color, thickness)
             image = draw_bounding_rect(True, image, brect,hand_sign_id)
 
         hand_pub.publish(br.cv2_to_imgmsg(image,"bgr8"))
@@ -169,45 +182,34 @@ def talker():
     global hand_pub
     tracker_pub = rospy.Publisher('hockey_robot/joint3_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
-    hand_pub = rospy.Publisher('/hockey_robot/hand_controller/hand', Image, queue_size=10)
+    hand_pub = rospy.Publisher('/hockey_robot/gest_controller/img', Image, queue_size=10)
 
-    rospy.init_node('hand_controller', anonymous=True)
-    rate = rospy.Rate(10) # 10hz
+    rospy.init_node('gest_controller', anonymous=True)
 
     cap = cv.VideoCapture(0)
     # pos = get_hand_position(cap,(0,0))
-    orgin = (0.5,0.5)
+    orgin = (0.25,0.5)
     x,y = (0,0)
-    while not rospy.is_shutdown():
-        hand,hand_sign_id  = get_hand_position(cap)
+    # while not rospy.is_shutdown():
+    while True:
+        hand,hand_sign_id  = get_hand_position(cap,orgin)
         if hand:
             x = hand.landmark[mp_hands.HandLandmark.WRIST].x-orgin[0]
             y = (hand.landmark[mp_hands.HandLandmark.WRIST].y-orgin[1])*2
         else:
             x,y = x,y
         if hand_sign_id == 1:
-            tracker_pub.publish(x)
-            pusher_pub.publish(y)
+            tracker_pub.publish(-y*10)
+            pusher_pub.publish(x*10)
         elif hand_sign_id == 0:
-            tracker_pub.publish(100)
-        # if pos != (0,0):
-        #     x,y = get_hand_position(cap,pos)
-        #     if (x,y) != (0,0):
-        #         tracker_pub.publish(y)
-        #         pusher_pub.publish(x)
-        #     rospy.loginfo( 'pos:{} {}'.format(x,y))
-        # else:
-        #     pos = get_hand_position(cap,(0,0))
-        rospy.loginfo('{} {} {}'.format(x, y, hand_sign_id))
-
-        # pub.publish(hello_str)
-        rate.sleep()
-    cap.release()
+            tracker_pub.publish(1000)
 
 
 if __name__ == '__main__':
-    model_save_path = 'model/keypoint_classifier/keypoint_classifier.hdf5'
-    keypoint_classifier = KeyPointClassifier()
+    cur_dir =  os.getcwd()
+    print(cur_dir)
+    model_save_path = os.path.join('/home/xumingjie/catkin_ws/src/air_hockey_robot/hockey_robot_gazebo/scripts/model/keypoint_classifier/keypoint_classifier.tflite') 
+    keypoint_classifier = KeyPointClassifier(model_path=model_save_path)
 
     mp_drawing = mp.solutions.drawing_utils
     mp_drawing_styles = mp.solutions.drawing_styles

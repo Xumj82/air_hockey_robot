@@ -67,7 +67,13 @@
   <exec_depend>hockey_robot_control</exec_depend>
   <exec_depend>hockey_robot_description</exec_depend>
   <exec_depend>xacro</exec_depend>
-
+  <!-- python packages -->
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>time</exec_depend>
+  <exec_depend>numpy</exec_depend>
+  <exec_depend>tensorflow</exec_depend>
+  <!-- <run_depend>python-tensorflow-pip</run_depend> -->
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

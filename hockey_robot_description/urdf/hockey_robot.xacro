@@ -159,7 +159,7 @@
   <link name="horizon_track_1">
     <visual>
       <geometry>
-        <box size="${width} 0.05 0.01"/>
+        <box size="${width} 0.01 0.01"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
@@ -212,7 +212,7 @@
   <link name="horizon_track_2">
     <visual>
       <geometry>
-        <box size="${width} 0.05 0.01"/>
+        <box size="${width} 0.01 0.01"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>

@@ -15,14 +15,14 @@ def callback_1(data:Range):
         score[1] += 1
         reset_world()
     cur_range[0] = data.range
-    rospy.loginfo(score)
+    # rospy.loginfo(score)
 
 def callback_2(data:Range):
     if cur_range[1] > thr and data.range <= thr:
         score[0] +=1
         reset_world()
     cur_range[1] = data.range
-    rospy.loginfo(score)
+    # rospy.loginfo(score)
 
 def listener():
 
