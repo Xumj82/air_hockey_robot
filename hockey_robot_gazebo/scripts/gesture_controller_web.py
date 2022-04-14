@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
+from ast import Str
 from cmath import sin
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float64
+from std_msgs.msg import Float64, String
 
 import os
 import cv2 as cv
@@ -12,7 +13,7 @@ import copy
 import itertools
 import mediapipe as mp
 import math
-
+import json
 import sys
 # print(sys.path)
 
@@ -29,8 +30,8 @@ def draw_bounding_rect(use_brect, image, brect, label):
 
     return image
 
-def calc_bounding_rect(image, landmarks):
-    image_width, image_height = image.shape[1], image.shape[0]
+def calc_bounding_rect(image_shape, landmarks):
+    image_width, image_height = image_shape
 
     landmark_array = np.empty((0, 2), int)
 
@@ -47,12 +48,12 @@ def calc_bounding_rect(image, landmarks):
     return [x, y, x + w, y + h]
 
 def calc_landmark_list(image, landmarks):
-    image_width, image_height = image.shape[1], image.shape[0]
+    image_width, image_height = image
 
     landmark_point = []
 
 
-    for _, landmark in enumerate(landmarks.landmark):
+    for _, landmark in enumerate(landmarks):
         landmark_x = min(int(landmark.x * image_width), image_width - 1)
         landmark_y = min(int(landmark.y * image_height), image_height - 1)
         # landmark_z = landmark.z
@@ -189,35 +190,55 @@ def get_hand_position(cap,orgin,
         # Flip the image horizontally for a selfie-view display.
         # cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
 
+def callback(data:String):
+    landmarks = json.loads(data.data)
+    landmark_list = calc_landmark_list((1280,720), landmarks)
+    pre_processed_landmark_list = pre_process_landmark(landmark_list)
+    hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+
+    x = landmarks[0].x-origin[0]
+    y = landmarks[0].y-origin[1]
+    print(x, y , hand_sign_id)
+    if hand_sign_id == 1:
+         tracker_pub.publish(-y*4)
+         pusher_pub.publish(-x*4)
+    elif hand_sign_id == 0:
+         tracker_pub.publish(10000)
+         # pusher_pub.publish(-x*4)
+    
+
 def talker():
     # global tracker_pub
     # global pusher_pub
     global hand_pub
+    global origin
+    global tracker_pub
+    global pusher_pub
     tracker_pub = rospy.Publisher('hockey_robot/joint3_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
     # tracker_vel_pub = rospy.Publisher('hockey_robot/joint5_position_controller/command', Float64, queue_size=10)
     hand_pub = rospy.Publisher('/hockey_robot/gest_controller/img', Image, queue_size=10)
 
-    rospy.init_node('gest_controller', anonymous=True)
-
-    cap = cv.VideoCapture(0)
-    # pos = get_hand_position(cap,(0,0))
-    orgin = (0.5,0.5)
-    x,y = (0,0)
-    # while not rospy.is_shutdown():
-    while True:
-        hand,hand_sign_id, image_shape  = get_hand_position(cap,orgin)
-        if hand:
-            x = hand.landmark[mp_hands.HandLandmark.WRIST].x-orgin[0]
-            y = (hand.landmark[mp_hands.HandLandmark.WRIST].y-orgin[1])
-        else:
-            x,y = x,y
-        if hand_sign_id == 1:
-            tracker_pub.publish(-y*4)
-            pusher_pub.publish(-x*4)
-        elif hand_sign_id == 0:
-            tracker_pub.publish(10000)
-            # pusher_pub.publish(-x*4)
+    rospy.init_node('web_gest_controller', anonymous=True)
+    rospy.Subscriber('/landmark', String, callback)
+    rospy.spin()
+    # cap = cv.VideoCapture(0)
+    # # pos = get_hand_position(cap,(0,0))
+    origin = (0.5,0.5)
+    # # while not rospy.is_shutdown():
+    # while True:
+    #     hand,hand_sign_id, image_shape  = get_hand_position(cap,orgin)
+    #     if hand:
+    #         x = hand.landmark[mp_hands.HandLandmark.WRIST].x-orgin[0]
+    #         y = (hand.landmark[mp_hands.HandLandmark.WRIST].y-orgin[1])
+    #     else:
+    #         x,y = x,y
+    #     if hand_sign_id == 1:
+    #         tracker_pub.publish(-y*4)
+    #         pusher_pub.publish(-x*4)
+    #     elif hand_sign_id == 0:
+    #         tracker_pub.publish(10000)
+    #         # pusher_pub.publish(-x*4)
 
 if __name__ == '__main__':
 

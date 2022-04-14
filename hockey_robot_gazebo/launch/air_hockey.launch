@@ -10,7 +10,7 @@
 
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find hockey_robot_gazebo)/worlds/air_hockeyv4.world"/>
+    <arg name="world_name" value="$(find hockey_robot_gazebo)/worlds/air_hockeyv5.world"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
@@ -33,9 +33,13 @@
 
   <node name="scoreboard_node" pkg="hockey_robot_gazebo" type="scoreboard.py" output="screen"></node>
 
-  <node name="traj_node" pkg="hockey_robot_gazebo" type="listener_camera.py" output="screen"></node>
+  <!-- <node name="traj_node" pkg="hockey_robot_gazebo" type="listener_camera.py" output="screen"></node> -->
 
-  <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node>
+  <!-- <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node> -->
+  <node name="web_gest_node" pkg="hockey_robot_gazebo" type="gesture_controller_web.py" output="screen"></node>
+
+  <node name="hockey_robot_rqt" pkg="rqt_gui" type="rqt_gui" respawn="false"
+	output="screen" />
 
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
      <arg name="port" value="9090"/>

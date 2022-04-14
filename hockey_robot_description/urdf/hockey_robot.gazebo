@@ -44,8 +44,11 @@
 
   <!-- Link3 -->
   <gazebo reference="pusher_1">
-    <mu1>0.04</mu1>
-    <mu2>0.04</mu2>
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+    <kp value="10000" />
+    <kd value="0" />
+    <maxVel value="100.0"/>
     <material>Gazebo/Black</material>
   </gazebo>
 
@@ -56,8 +59,11 @@
   </gazebo>
 
   <gazebo reference="pusher_2">
-    <mu1>0.04</mu1>
-    <mu2>0.04</mu2>
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+    <maxVel value="100.0"/>
+    <kp value="10000" />
+    <kd value="0" />
     <material>Gazebo/Black</material>
   </gazebo>
 

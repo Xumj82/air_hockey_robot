@@ -159,7 +159,7 @@
   <link name="horizon_track_1">
     <visual>
       <geometry>
-        <box size="${width} 0.01 0.01"/>
+        <box size="${width} 0 0"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
@@ -195,6 +195,9 @@
       <geometry>
         <cylinder length="${pusher_height}" radius="${pusher_radius}"/>
       </geometry>
+      <surface>
+        <bounce restitution_coefficient="1.0" threshold="0.01"/>
+      </surface>
     </collision>
     <inertial>
       <mass value="10"/>
@@ -212,7 +215,7 @@
   <link name="horizon_track_2">
     <visual>
       <geometry>
-        <box size="${width} 0.01 0.01"/>
+        <box size="${width} 0 0"/>
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="blue"/>
@@ -232,7 +235,7 @@
     <axis xyz="0 1 0"/>
     <parent link="base_link"/>
     <child link="horizon_track_2"/>
-    <limit effort="1000.0" lower="0" upper="${tackers_radius}" velocity="0.5"/>
+    <limit effort="1000.0" lower="0" upper="${tackers_radius}" velocity="1"/>
     <origin xyz="0 ${tackers_radius} ${tackers_height}" rpy="0 0 ${pi}"/>
   </joint>
 
@@ -258,10 +261,18 @@
     <axis xyz="1 0 0"/>
     <parent link="horizon_track_2"/>
     <child link="pusher_2"/>
-    <limit effort="1000.0" lower="-0.5" upper="0.5" velocity="0.5"/>
+    <limit effort="1000.0" lower="-0.5" upper="0.5" velocity="1"/>
     <origin xyz="0 0 -${tackers_height-pusher_height/2}"/>
   </joint>
 
+  <!-- <joint name="base_to_horizon_track_2_2" type="prismatic">
+    <axis xyz="0 1 0"/>
+    <parent link="base_link"/>
+    <child link="horizon_track_2"/>
+    <limit effort="1000.0" lower="0" upper="${tackers_radius}" velocity="0.5"/>
+    <origin xyz="0 ${tackers_radius} ${tackers_height}" rpy="0 0 ${pi}"/>
+  </joint> -->
+  
   <transmission name="tran1">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="base_to_horizon_track_1">
@@ -305,6 +316,17 @@
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
+
+  <!-- <transmission name="tran5">
+    <type>transmission_interface/SimpleTransmission</type>
+    <joint name="base_to_horizon_track_2_2">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+    </joint>
+    <actuator name="motor5">
+      <hardwareInterface>EffortJointInterface</hardwareInterface>
+      <mechanicalReduction>1</mechanicalReduction>
+    </actuator>
+  </transmission> -->
 
 
 </robot>
