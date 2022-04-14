@@ -152,41 +152,43 @@ class planner():
             for i in range(len(hockey_position_list)-1):
                 if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
                     if i <= STRATEGY_3_PREPARE_RANGE:
-                        self.setPusher1_position(self.strategy_3_defence_position)
+                        #x/(x+0.03)=(y/y+?) ## x == (0.86*2-STRATEGY_3_SAFE_LINE), y+? == self.strategy_3_attact_position, y == self.strategy_3_defence_position
+                        self.strategy_3_attact_position = self.strategy_3_defence_position + 0.03*self.strategy_3_defence_position/(0.86*2-STRATEGY_3_SAFE_LINE)
+                        self.setPusher1_position(self.strategy_3_attact_position)
                         self.setTrack1_position(STRATEGY_3_SAFE_LINE+0.05)
                         return
                     else:
                         return
-    def strategy_4(self,same_path,Jointinfo):
-        prefer = 0
-        if Jointinfo[1] < 0:
-            prefer = -0.05
-        elif Jointinfo[1] > 0:
-            prefer = 0.05
-        if not same_path:
-            hockey_position_list = list(self.predict_data.values())
-            for i in range(len(hockey_position_list)-1):
-                if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
-                    self.strategy_3_defence_position = (hockey_position_list[i][1] + hockey_position_list[i+1][1])/2
-                    if i <= STRATEGY_3_PREPARE_RANGE:
-                        self.strategy_1()
-                        return
-                    else:
-                        print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
-                        self.setPusher1_position(self.strategy_3_defence_position+prefer)
-                        self.setTrack1_position(STRATEGY_3_ATTACK_LINE-0.05)
-                        return
-            return
-        else:
-            hockey_position_list = list(self.predict_data.values())
-            for i in range(len(hockey_position_list)-1):
-                if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
-                    if i <= STRATEGY_3_PREPARE_RANGE:
-                        self.setPusher1_position(self.strategy_3_defence_position+prefer)
-                        self.setTrack1_position(STRATEGY_3_SAFE_LINE-0.05)
-                        return
-                    else:
-                        return
+    # def strategy_4(self,same_path,Jointinfo):
+    #     prefer = 0
+    #     if Jointinfo[1] < 0:
+    #         prefer = -0.05
+    #     elif Jointinfo[1] > 0:
+    #         prefer = 0.05
+    #     if not same_path:
+    #         hockey_position_list = list(self.predict_data.values())
+    #         for i in range(len(hockey_position_list)-1):
+    #             if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
+    #                 self.strategy_3_defence_position = (hockey_position_list[i][1] + hockey_position_list[i+1][1])/2
+    #                 if i <= STRATEGY_3_PREPARE_RANGE:
+    #                     self.strategy_1()
+    #                     return
+    #                 else:
+    #                     print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
+    #                     self.setPusher1_position(self.strategy_3_defence_position+prefer)
+    #                     self.setTrack1_position(STRATEGY_3_ATTACK_LINE-0.05)
+    #                     return
+    #         return
+    #     else:
+    #         hockey_position_list = list(self.predict_data.values())
+    #         for i in range(len(hockey_position_list)-1):
+    #             if hockey_position_list[i][0] > STRATEGY_3_SAFE_LINE and hockey_position_list[i+1][0] <= STRATEGY_3_SAFE_LINE:
+    #                 if i <= STRATEGY_3_PREPARE_RANGE:
+    #                     self.setPusher1_position(self.strategy_3_defence_position+prefer)
+    #                     self.setTrack1_position(STRATEGY_3_SAFE_LINE-0.05)
+    #                     return
+    #                 else:
+    #                     return
 
     def check_hockey_static(self):
         hockey_position_list = list(self.predict_data.values())
