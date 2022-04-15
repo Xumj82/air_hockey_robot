@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+canvas {
+  -webkit-transform: scaleX(-1);
+  transform: scaleX(-1);
+}
+
+</style>
+<script src="http://static.robotwebtools.org/EventEmitter2/current/eventemitter2.min.js"></script>
+<script src="http://static.robotwebtools.org/roslibjs/current/roslib.min.js"></script>
+<script src="http://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script>
+// setup connection to the ROS server and prepare the topic
+  var ros = new ROSLIB.Ros();
+  
+  ros.on('connection', function() { console.log('Connected to websocket server.');});
+
+  ros.on('error', function(error) { console.log('Error connecting to websocket server: ', error); window.alert('Error connecting to websocket server'); });
+
+  ros.on('close', function() { console.log('Connection to websocket server closed.');});
+
+  ros.connect("ws://localhost:9090");
+
+  var gazebopauseClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/gazebo/pause_physics',
+    serviceType : 'std_srvs/Empty'
+  });
+
+  var gazebounpauseClient = new ROSLIB.Service({
+    ros : ros,
+    name : '/gazebo/unpause_physics',
+    serviceType : 'std_srvs/Empty'
+  });
+
+  var landmarkTopic = new ROSLIB.Topic({
+    ros : ros,
+    name : '/landmark',
+    messageType : 'std_msgs/String'
+  });
+
+  var stream_rgb_listener = new ROSLIB.Topic({
+    ros : ros,
+    name : 'hockey_robot/cam_pub/rgb',
+    messageType : 'std_msgs/String'
+  });
+
+  var score_listener = new ROSLIB.Topic({
+    ros : ros,
+    name : '/hockey_robot/referee/score',
+    messageType : 'std_msgs/String'
+  });
+
+  stream_rgb_listener.subscribe(function(msg) {
+    var canvas = document.getElementById('rgb-canvas');
+    ctx = canvas.getContext('2d');
+    var image = new Image();
+    image.onload = function() {
+      ctx.drawImage(image, 0, 0);
+    };
+    image.src = `data:image/png;base64,${msg.data}`;
+  });
+
+  score_listener.subscribe(function(msg) {
+    var score_board = document.getElementById('score_board');
+    score_board.innerText = msg.data
+
+  });
+
+
+</script>
+</head>
+
+<!-- declare interface and the canvases that will display the video and the still shots -->
+<body>
+    <div>
+      <p>Open camera</p>
+      <label class="switch">
+          <input type="checkbox" id="camera_tg">
+          <span class="slider round"></span>
+      </label>
+      <p>Play</p>
+      <label class="switch">
+        <input type="checkbox" id="play_tg">
+        <span class="slider round"></span>
+    </label>
+    </div>
+    <div>
+      <div class="container" style="width:1000px;height:auto;float: left;">
+          <video  hidden class="input_video"></video>
+          <canvas class="output_canvas" width="1280px" height="720px"></canvas>
+      </div>
+
+      <div class="container" style="width:500px;height:auto;float: right;;">
+        <canvas id = "rgb-canvas" width="500px" height="600px"></canvas>
+        <h2 id="score_board">wait for start</h2>
+      </div>
+    </div>
+
+<script>
+
+    camera_tg = document.getElementById('camera_tg')
+    play_tg = document.getElementById('play_tg')
+
+    const videoElement = document.getElementsByClassName('input_video')[0];
+    const canvasElement = document.getElementsByClassName('output_canvas')[0];
+    const canvasCtx = canvasElement.getContext('2d');
+
+    function canvas_arrow(context, fromx, fromy, tox, toy) {
+      var headlen = 10; // length of head in pixels
+      var dx = tox - fromx;
+      var dy = toy - fromy;
+      var angle = Math.atan2(dy, dx);
+      context.lineWidth = 10;
+      context.strokeStyle = '#39FF33';
+      context.moveTo(fromx, fromy);
+      context.lineTo(tox, toy);
+      context.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+      context.moveTo(tox, toy);
+      context.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+    }
+
+
+    function onResults(results) {
+
+
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+        canvasCtx.beginPath();
+        canvasCtx.arc(canvasElement.width/2,canvasElement.height/2,40,0,2*Math.PI);
+        canvasCtx.stroke();
+      if (results.multiHandLandmarks) {
+
+        for (const landmarks of results.multiHandLandmarks) {
+            var msg = new ROSLIB.Message({
+                data: JSON.stringify(landmarks)
+            });
+          landmarkTopic.publish(msg);
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+                         {color: '#00FF00', lineWidth: 5});
+          drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 2});
+
+            canvasCtx.beginPath();
+            canvas_arrow(canvasCtx,canvasElement.width/2,canvasElement.height/2, landmarks[0].x*canvasElement.width, landmarks[0].y*canvasElement.height);
+            canvasCtx.stroke();
+
+
+          break
+        }
+      }
+
+
+      canvasCtx.restore();
+    }
+
+
+
+    const hands = new Hands({locateFile: (file) => {
+         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+    }});
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    hands.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({image: videoElement});
+      },
+      width: 1280,
+      height: 720
+    });
+
+
+    camera_tg.addEventListener('change', function(){
+        if(this.checked) {
+            
+            camera.start();
+
+        }else {
+            
+            camera.stop();
+        }
+    }, 
+    false);
+
+    play_tg.addEventListener('change', function(){
+        if(this.checked) {
+          var request = new ROSLIB.ServiceRequest();
+
+          gazebounpauseClient.callService(request);
+        }else {
+
+          var request = new ROSLIB.ServiceRequest();
+
+          gazebopauseClient.callService(request);
+
+        }
+    }, false);
+
+</script>
+
+
+</body>
+
+</html>

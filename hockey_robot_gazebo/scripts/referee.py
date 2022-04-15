@@ -100,7 +100,7 @@ def listener():
     # rospy.Subscriber("/hockey_robot/joint_states",JointState, callback_1)
     rospy.Subscriber("/hockey_robot/laser/sonar_1", Range, callback_blue)
     rospy.Subscriber("/hockey_robot/laser/sonar_2", Range, callback_red)
-    rospy.Subscriber("/hockey_robot/gest_controller/hand_sign",Int16, pause)
+    # rospy.Subscriber("/hockey_robot/gest_controller/hand_sign",Int16, pause)
     
     # spin() simply keeps python from exiting until this node is stopped
     

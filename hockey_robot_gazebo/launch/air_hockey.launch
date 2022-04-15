@@ -38,11 +38,16 @@
   <!-- <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node> -->
   <node name="web_gest_node" pkg="hockey_robot_gazebo" type="gesture_controller_web.py" output="screen"></node>
 
+  <node name="web_cam_pub_node" pkg="hockey_robot_gazebo" type="camera_publisher_web.py" output="screen"></node>
+
   <node name="hockey_robot_rqt" pkg="rqt_gui" type="rqt_gui" respawn="false"
 	output="screen" />
 
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
-     <arg name="port" value="9090"/>
+    <arg name="port" value="9090"/>
+    <!-- <arg name="ssl" default="true" />
+    <arg name="certfile" default="/home/xumingjie/ssl/server_cert.pem" />
+    <arg name="keyfile" default="/home/xumingjie/ssl/server_key.pem" /> -->
   </include>
 
 </launch>
