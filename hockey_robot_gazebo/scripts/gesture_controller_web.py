@@ -141,7 +141,7 @@ def talker():
     pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
     # tracker_vel_pub = rospy.Publisher('hockey_robot/joint5_position_controller/command', Float64, queue_size=10)
     hand_sign_pub = rospy.Publisher('/hockey_robot/gest_controller/hand_sign', Int16, queue_size=10)
-    rospy.init_node('web_gest_controller', anonymous=True)
+    rospy.init_node('gest_controller', anonymous=True)
     rospy.Subscriber('/landmark', String, callback)
     rospy.spin()
     # cap = cv.VideoCapture(0)

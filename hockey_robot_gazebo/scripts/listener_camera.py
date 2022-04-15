@@ -50,7 +50,7 @@ import cv2
 import sys
 import message_filters
 from sensor_msgs.msg import JointState
-# print(sys.path)
+# #print(sys.path)
 # sys.path.append('scripts')
 # from planner import plan_strategy
 
@@ -109,16 +109,16 @@ class planner():
         elif hockey_position_list[-1][0]>0:
             return False
     def strategy_1(self):
-        print(1)
+        #print(1)
         hockey_position_list = list(self.predict_data.values())
         for i in range(len(hockey_position_list)-1):
             if hockey_position_list[i][0] >0 and hockey_position_list[i+1][0] <=0 :
                 self.strategy_1_defence_position = (hockey_position_list[i][1] + hockey_position_list[i+1][1])/2
-                print('go to defence position (%0.2f,%0.2f)'%(0,self.strategy_1_defence_position))
+                #print('go to defence position (%0.2f,%0.2f)'%(0,self.strategy_1_defence_position))
                 self.setPusher1_position(self.strategy_1_defence_position)
                 self.setTrack1_position(0)
     def strategy_2(self):
-        print(2)
+        #print(2)
         hockey_pos = list(self.predict_data.values())
         self.strategy_2_defence_position_x,self.strategy_2_defence_position_y = hockey_pos[0][0],hockey_pos[0][1]
         self.setPusher1_position(self.strategy_2_defence_position_y)
@@ -126,13 +126,13 @@ class planner():
         # for pre_time,hockey_pos in self.predict_data.items():
         #     if hockey_pos[0]<=0.86:
         #         self.strategy_2_defence_position_x,self.strategy_2_defence_position_y = hockey_pos[0],hockey_pos[1]
-        #         print('go to defence position (%0.2f,%0.2f)'%(self.strategy_2_defence_position_x,self.strategy_2_defence_position_y))
+        #         #print('go to defence position (%0.2f,%0.2f)'%(self.strategy_2_defence_position_x,self.strategy_2_defence_position_y))
         #         self.setPusher1_position(self.strategy_2_defence_position_y)
         #         self.setTrack1_position(self.strategy_2_defence_position_x-0.05)
 
 
     def strategy_3(self,same_path):
-        print(3)
+        #print(3)
         if not same_path:
             hockey_position_list = list(self.predict_data.values())
             for i in range(len(hockey_position_list)-1):
@@ -142,7 +142,7 @@ class planner():
                         self.strategy_1()
                         return
                     else:
-                        print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
+                        #print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
                         self.setPusher1_position(self.strategy_3_defence_position)
                         self.setTrack1_position(STRATEGY_3_ATTACK_LINE)
                         return
@@ -174,7 +174,7 @@ class planner():
     #                     self.strategy_1()
     #                     return
     #                 else:
-    #                     print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
+    #                     #print('go to prepare position (%0.2f,%0.2f)'%(0,self.strategy_3_defence_position))
     #                     self.setPusher1_position(self.strategy_3_defence_position+prefer)
     #                     self.setTrack1_position(STRATEGY_3_ATTACK_LINE-0.05)
     #                     return
@@ -216,8 +216,8 @@ class planner():
         return True
     
     def update_hockey_path(self,hockey_path):
-        print("******************************")
-        print(hockey_path)
+        #print("******************************")
+        #print(hockey_path)
         if len(hockey_path) != HOCKEY_PATH_LENGTH:
             return False
         path_difference = 0
@@ -237,17 +237,17 @@ class planner():
 
         #step 1:check if need plan:
         # try:
-        print('plan start')
+        #print('plan start')
         if not self.check_hockey_direction():
-            print('No need to plan')
+            #print('No need to plan')
             self.reset_position()
             return
         
         if self.check_hockey_static():
-            print('strategy1 is not suit')
+            #print('strategy1 is not suit')
             #check_hockey_position:
             self.strategy = 2
-            print('plan start strategy_2')
+            #print('plan start strategy_2')
             self.strategy_2()
             return
         else:
@@ -260,30 +260,30 @@ class planner():
             if same_path:
                 return
             if self.check_strategy_1():
-                print('plan start strategy_1')
+                #print('plan start strategy_1')
                 self.strategy_1()
                 return
             else:
                 # strategy_1 can not use
-                print ('Error:Defence strategy(strategy1) is not suit')
+                #print ('Error:Defence strategy(strategy1) is not suit')
                 return
         # elif self.strategy  == 2:
-        #     print('plan start strategy_2')
+        #     #print('plan start strategy_2')
         #     self.strategy_2()
         #     return
         elif self.strategy == 3:
-            print('plan start strategy_3')
+            #print('plan start strategy_3')
             self.strategy_3(same_path)
             return
         elif self.strategy == 4:
-            print('plan start strategy_4')
+            #print('plan start strategy_4')
             self.strategy_4(same_path,Jointinfo)
             return
         else:
-            print("error: wrong strategy code, pls report")
+            #print("error: wrong strategy code, pls report")
             return
         # except:
-        #     print('planner unknown error')
+        #     #print('planner unknown error')
 
     # rospy.Subscriber('/hockey_robot/joint_states', JointState, callback)
 
@@ -317,10 +317,10 @@ class predicter():
         if self.last_time_stamp == time_stamp:
             return self.prediction
         # else:
-        #     print(self.last_time_stamp)
-        #     print(time_stamp)
-        #     print("#########################")
-        # print("start_setting_points")
+        #     #print(self.last_time_stamp)
+        #     #print(time_stamp)
+        #     #print("#########################")
+        # #print("start_setting_points")
         self.last_time_stamp = self.time_stamp
         self.time_stamp = int(time_stamp)
         self.last_location_x = self.ball_location_x
@@ -393,7 +393,7 @@ def detect_coordinates_of_red_balls(img):
     img = cv2.medianBlur(img,15)
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
     circles = cv2.HoughCircles(img_gray,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=15,maxRadius=25)
-    # print(circles)
+    # #print(circles)
     if circles is not None:
         x = circles[0][0][0]
         y = circles[0][0][1]
@@ -410,13 +410,13 @@ def convert_image_coordinate_into_actual(prediction):
     return prediction
 
 def callback(data : Image):#, JointData:JointState):
-    # print(1)
+    # #print(1)
     current_time = data.header.seq
     if current_time % microsecond_between_each_frame == 0:
-        print(current_time)
-        # print(time.time())
+        #print(current_time)
+        # #print(time.time())
         # current_time = microsecond_between_each_frame*(current_time//microsecond_between_each_frame)
-        # print(current_time)
+        # #print(current_time)
         img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
         # filename = '{}{}.jpg'.format(save_dir,data.header.seq)
         # cv2.imwrite(filename, img)
@@ -425,20 +425,20 @@ def callback(data : Image):#, JointData:JointState):
         # cv2.imwrite(filename, img)
         detected,x,y = detect_coordinates_of_red_balls(img)
         if not detected:
-            print("cannot detect")
+            #print("cannot detect")
             return
-        # print(data.header.seq)
+        # #print(data.header.seq)
         prediction, hockey_path = default_predicter.set_current_status(x,y,current_time)
         # # pred_res = str(pickle.dumps(prediction))
         # pred_res = json.dumps(prediction)
         # pred_publisher.publish(pred_res)
-        # print(prediction)
-        # print("++++++++++++++++++++++++++++++++")
+        # #print(prediction)
+        # #print("++++++++++++++++++++++++++++++++")
         # Joint_x, Joint_y = JointData.position[0], JointData.position[2]
         # Jointinfo = [Joint_x, Joint_y]
         prediction = convert_image_coordinate_into_actual(prediction)
-        print(prediction)
-        print("++++++++++++++++++++++++++++++++")
+        #print(prediction)
+        #print("++++++++++++++++++++++++++++++++")
         default_planner.update_prediction(prediction,hockey_path)#,Jointinfo)
         #here suppose to call the actuall function of policy
         return
