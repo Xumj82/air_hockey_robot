@@ -359,10 +359,10 @@ class predicter():
                     if time_key < self.time_stamp:
                         self.prediction.pop(time_key)
                 if len(self.prediction.keys()) >= self.time_range*2/3:
-                    return self.prediction
+                    return self.prediction,[self.x_speed,self.y_speed,self.x_pending,self.y_pending]
                 else:
                     self.continue_predict()
-                    return self.prediction
+                    return self.prediction,[self.x_speed,self.y_speed,self.x_pending,self.y_pending]
         self.build_new_predict()
         return self.prediction,[self.x_speed,self.y_speed,self.x_pending,self.y_pending]
 
