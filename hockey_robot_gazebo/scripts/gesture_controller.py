@@ -195,6 +195,7 @@ def talker():
     global hand_pub
     tracker_pub = rospy.Publisher('hockey_robot/joint3_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
+    status_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
     # tracker_vel_pub = rospy.Publisher('hockey_robot/joint5_position_controller/command', Float64, queue_size=10)
     hand_pub = rospy.Publisher('/hockey_robot/gest_controller/img', Image, queue_size=10)
 

@@ -11,6 +11,7 @@
 
   <!-- Link1 -->
   <gazebo reference="base_link">
+    <!-- <material>Gazebo/Orange</material> -->
      <collision>
         <surface>
           <bounce>
@@ -49,7 +50,7 @@
     <kp value="10000" />
     <kd value="0" />
     <maxVel value="100.0"/>
-    <material>Gazebo/Black</material>
+    <material>Gazebo/Red</material>
   </gazebo>
 
   <gazebo reference="horizon_track_2">
@@ -64,7 +65,7 @@
     <maxVel value="100.0"/>
     <kp value="10000" />
     <kd value="0" />
-    <material>Gazebo/Black</material>
+    <material>Gazebo/Blue</material>
   </gazebo>
 
   <!-- camera_link -->

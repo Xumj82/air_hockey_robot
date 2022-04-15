@@ -5,7 +5,7 @@ from cmath import sin
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float64, String
+from std_msgs.msg import Float64, String, Int16
 
 import os
 import cv2 as cv
@@ -21,6 +21,8 @@ import numpy as np
 import tensorflow as tf
 
 from gesture_recognition.keypoint_classifier import KeyPointClassifier
+
+ORIGIN = (0.5,0.5)
 
 def draw_bounding_rect(use_brect, image, brect, label):
     if use_brect:
@@ -54,12 +56,11 @@ def calc_landmark_list(image, landmarks):
 
 
     for _, landmark in enumerate(landmarks):
-        landmark_x = min(int(landmark.x * image_width), image_width - 1)
-        landmark_y = min(int(landmark.y * image_height), image_height - 1)
+        landmark_x = min(int(landmark['x'] * image_width), image_width - 1)
+        landmark_y = min(int(landmark['y'] * image_height), image_height - 1)
         # landmark_z = landmark.z
 
         landmark_point.append([landmark_x, landmark_y])
-
     return landmark_point
 
 def pre_process_landmark(landmark_list):
@@ -111,120 +112,41 @@ def pre_process_point_history(image, point_history):
 
     return temp_point_history
 
-def get_hand_position(cap,orgin,
-                        radius = 0.1,
-                        color = (0, 0, 255),
-                        thickness =0
-):
-    with mp_hands.Hands(
-        model_complexity=0,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5) as hands:
-        success, image = cap.read()
-        if not success:
-            print("Ignoring empty camera frame.")
-            # If loading a video, use 'break' instead of 'continue'.
-
-        # To improve performance, optionally mark the image as not writeable to
-        # pass by reference.
-        image.flags.writeable = False
-        
-        image = cv.cvtColor(image, cv.COLOR_BGR2RGB)
-        
-        results = hands.process(image)
-
-        # Draw the hand annotations on the image.
-        image.flags.writeable = True
-        image = cv.cvtColor(image, cv.COLOR_RGB2BGR)
-        image_hight, image_width, _ = image.shape
-        
-        orgin = (int(image_width*orgin[0]), int(image_hight*orgin[1]))
-        radius = int( min(image_hight, image_width) * radius)
-
-        x,y = -1,-1
-        hand_0 = None
-        hand_sign_id = None
-        if results.multi_hand_landmarks:
-            hand_0 = results.multi_hand_landmarks[0]
-            x = hand_0.landmark[mp_hands.HandLandmark.WRIST].x * image_width
-            y = hand_0.landmark[mp_hands.HandLandmark.WRIST].y * image_hight
-
-
-
-            for hand_landmarks in results.multi_hand_landmarks:
-                mp_drawing.draw_landmarks(
-                    image,
-                    hand_landmarks,
-                    mp_hands.HAND_CONNECTIONS,
-                    mp_drawing_styles.get_default_hand_landmarks_style(),
-                    mp_drawing_styles.get_default_hand_connections_style())
-
-
-
-            brect = calc_bounding_rect(image, hand_landmarks)
-
-            landmark_list = calc_landmark_list(image, hand_landmarks)
-
-
-            pre_processed_landmark_list = pre_process_landmark(
-                landmark_list)
-            hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
-            # rospy.loginfo('hand_sign:'+hand_sign_id)
-
-            radians = math.atan2(y-orgin[1], x-orgin[0])
-
-            x_pivot, y_pivot = (math.cos(radius), math.sin(radius))
-            # print(radians)
-
-            image = cv.arrowedLine(image, orgin, (int(x),int(y)),
-                                     (0, 255, 0), 2)
-            # image = cv.arrowedLine(image, orgin, (int(x_pivot),int(y_pivot)),
-            #                 (0, 0, 255), 2)
-            image = cv.circle(image, orgin, radius, color, thickness)
-            image = draw_bounding_rect(True, image, brect,hand_sign_id)
-        image = cv.flip(image, 1)
-
-
-        hand_pub.publish(br.cv2_to_imgmsg(image,"bgr8"))
-        return hand_0,hand_sign_id ,(image_hight, image_width)
-        # Flip the image horizontally for a selfie-view display.
-        # cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
-
 def callback(data:String):
     landmarks = json.loads(data.data)
     landmark_list = calc_landmark_list((1280,720), landmarks)
     pre_processed_landmark_list = pre_process_landmark(landmark_list)
     hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
 
-    x = landmarks[0].x-origin[0]
-    y = landmarks[0].y-origin[1]
-    print(x, y , hand_sign_id)
+    x = landmarks[0]['x']-ORIGIN[0]
+    y = landmarks[0]['y']-ORIGIN[1]
+    
+    # print(x, y , hand_sign_id)
     if hand_sign_id == 1:
-         tracker_pub.publish(-y*4)
-         pusher_pub.publish(-x*4)
+        tracker_pub.publish(-y*4)
+        pusher_pub.publish(-x*4)
     elif hand_sign_id == 0:
-         tracker_pub.publish(10000)
-         # pusher_pub.publish(-x*4)
+        tracker_pub.publish(10000)
+    else:
+        hand_sign_pub.publish(hand_sign_id)
     
 
 def talker():
     # global tracker_pub
     # global pusher_pub
-    global hand_pub
-    global origin
     global tracker_pub
     global pusher_pub
+    global hand_sign_pub
     tracker_pub = rospy.Publisher('hockey_robot/joint3_position_controller/command', Float64, queue_size=10)
     pusher_pub = rospy.Publisher('hockey_robot/joint4_position_controller/command', Float64, queue_size=10)
     # tracker_vel_pub = rospy.Publisher('hockey_robot/joint5_position_controller/command', Float64, queue_size=10)
-    hand_pub = rospy.Publisher('/hockey_robot/gest_controller/img', Image, queue_size=10)
-
+    hand_sign_pub = rospy.Publisher('/hockey_robot/gest_controller/hand_sign', Int16, queue_size=10)
     rospy.init_node('web_gest_controller', anonymous=True)
     rospy.Subscriber('/landmark', String, callback)
     rospy.spin()
     # cap = cv.VideoCapture(0)
     # # pos = get_hand_position(cap,(0,0))
-    origin = (0.5,0.5)
+    
     # # while not rospy.is_shutdown():
     # while True:
     #     hand,hand_sign_id, image_shape  = get_hand_position(cap,orgin)

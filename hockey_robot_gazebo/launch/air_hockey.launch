@@ -4,7 +4,7 @@
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
   <arg name="paused" default="true"/>
   <arg name="use_sim_time" default="true"/>
-  <arg name="gui" default="true"/>
+  <arg name="gui" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
 
@@ -31,9 +31,9 @@
   <!-- ros_control rrbot launch file -->
   <include file="$(find hockey_robot_control)/launch/hockey_robot_control.launch" />
 
-  <node name="scoreboard_node" pkg="hockey_robot_gazebo" type="scoreboard.py" output="screen"></node>
+  <node name="referee_node" pkg="hockey_robot_gazebo" type="referee.py" output="screen"></node>
 
-  <!-- <node name="traj_node" pkg="hockey_robot_gazebo" type="listener_camera.py" output="screen"></node> -->
+  <node name="traj_node" pkg="hockey_robot_gazebo" type="listener_camera.py" output="screen"></node>
 
   <!-- <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node> -->
   <node name="web_gest_node" pkg="hockey_robot_gazebo" type="gesture_controller_web.py" output="screen"></node>
