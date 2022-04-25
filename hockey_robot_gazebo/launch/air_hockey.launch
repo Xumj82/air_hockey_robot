@@ -2,9 +2,9 @@
 <launch>
 
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
-  <arg name="paused" default="false"/>
+  <arg name="paused" default="true"/>
   <arg name="use_sim_time" default="true"/>
-  <arg name="gui" default="true"/>
+  <arg name="gui" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
 
@@ -35,16 +35,15 @@
 
   <node name="traj_node" pkg="hockey_robot_gazebo" type="listener_camera.py" output="screen"></node>
 
-  <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node>
-  <!-- <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller_web.py" output="screen"></node> -->
+  <!-- <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller.py" output="screen"></node> -->
+  <node name="gest_node" pkg="hockey_robot_gazebo" type="gesture_controller_web.py" output="screen"></node>
+  <!-- <node name="agent_node" pkg="hockey_robot_gazebo" type="ai_controller.py" output="screen"></node> -->
+  <node name="web_cam_pub_node" pkg="hockey_robot_gazebo" type="camera_publisher_web.py" output="screen"></node>
 
-  <!-- <node name="web_cam_pub_node" pkg="hockey_robot_gazebo" type="camera_publisher_web.py" output="screen"></node>
-
-  <node name="hockey_robot_rqt" pkg="rqt_gui" type="rqt_gui" respawn="false"
-	output="screen" />
+  <node name="hockey_robot_rqt" pkg="rqt_gui" type="rqt_gui" respawn="false" output="screen" />
 
   <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch" > 
     <arg name="port" value="9090"/>
-  </include> -->
+  </include>
 
 </launch>

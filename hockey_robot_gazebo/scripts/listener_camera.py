@@ -36,6 +36,7 @@
 ## Simple talker demo that listens to std_msgs/Strings published 
 ## to the 'chatter' topic
 
+from ast import Global
 import numpy as np
 import rospy
 from std_msgs.msg import String
@@ -367,6 +368,7 @@ class predicter():
         return self.prediction,[self.x_speed,self.y_speed,self.x_pending,self.y_pending]
 
 
+
 default_predicter = predicter()
 default_planner = planner()
                 
@@ -377,23 +379,30 @@ def detect_coordinates_of_red_balls(img):
     # cv2.imwrite(filename, img)
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
-    lower_red = np.array([0,50,50])
-    upper_red = np.array([10,255,255])
+    lower_red = np.array([25, 52, 72])
+    upper_red = np.array([102, 255, 255])
     mask0 = cv2.inRange(img_hsv,lower_red, upper_red)
 
     lower_red = np.array([170,50,50])
     upper_red = np.array([180,255,255])
     mask1 = cv2.inRange(img_hsv,lower_red, upper_red)
 
-    mask = mask0+mask1
+    mask = mask0
     #1 locate the ball
     img[np.where(mask==0)] = 0
     img[444:575,101:125,:] = 0
     img[444:575,890:925,:] = 0
-    img = cv2.medianBlur(img,15)
+    img = cv2.medianBlur(img,9)
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-    circles = cv2.HoughCircles(img_gray,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=30,minRadius=15,maxRadius=25)
-    # #print(circles)
+    # cv2.imwrite('/home/xumingjie/catkin_ws/src/air_hockey_robot/test.png',img_gray)
+    circles = cv2.HoughCircles(img_gray,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=10,maxRadius=20)
+    # circles = cv2.HoughCircles(img_gray,cv2.HOUGH_GRADIENT,1,20,param1=50,param2=10,minRadius=15,maxRadius=20)
+    # circles = np.uint16(np.around(circles))
+    # for i in circles[0,:]:
+    #     # draw the outer circle
+    #     cv2.circle(img_gray,(i[0],i[1]),i[2],(0,255,0),2)
+
+    # print(circles)
     if circles is not None:
         x = circles[0][0][0]
         y = circles[0][0][1]
@@ -427,11 +436,13 @@ def callback(data : Image):#, JointData:JointState):
         if not detected:
             #print("cannot detect")
             return
+        
         # #print(data.header.seq)
         prediction, hockey_path = default_predicter.set_current_status(x,y,current_time)
-        # # pred_res = str(pickle.dumps(prediction))
-        # pred_res = json.dumps(prediction)
-        # pred_publisher.publish(pred_res)
+        # pred_res = str(pickle.dumps(prediction))
+        pred_res = json.dumps(prediction)
+        puck_pos.publish(pred_res)
+        # puck_pos.publish("{},{}".format((900.5-x)/388-0.1,(512.5-y)/196*0.48))
         # #print(prediction)
         # #print("++++++++++++++++++++++++++++++++")
         # Joint_x, Joint_y = JointData.position[0], JointData.position[2]
@@ -452,11 +463,12 @@ def listener():
     # anonymous=True flag means that rospy will choose a unique
     # name for our 'listener' node so that multiple listeners can
     # run simultaneously.
+    global puck_pos
     rospy.init_node('listener', anonymous = True)
     # global pred_publisher
 
     # rospy.init_node('path_predictor', anonymous=True)
-    # pred_publisher = rospy.Publisher('/hockey_robot/predicter/pred_res', String, queue_size=10)
+    puck_pos = rospy.Publisher('/hockey_robot/predictor/puck_pos', String, queue_size=10)
     # image_sub = message_filters.Subscriber('/hockey_robot/camera1/image_raw', Image)
     # joint_sub = message_filters.Subscriber('/hockey_robot/joint_states', JointState)
     # ts = message_filters.TimeSynchronizer([image_sub, joint_sub], 1)

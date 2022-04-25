@@ -159,7 +159,7 @@
       </light>
     </state>
     <model name='hockey'>
-      <link name='link_0'>
+      <link name='link_puck'>
         <inertial>
           <mass>0.00879646</mass>
           <inertia>
@@ -172,7 +172,7 @@
           </inertia>
           <pose>0 0 0 0 -0 0</pose>
         </inertial>
-        <pose>0 0 -0.049992 -3e-06 5e-06 0</pose>
+        <pose>-0.09502 -0.004073 0 0 -0 0</pose>
         <gravity>1</gravity>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -194,8 +194,12 @@
             <shader type='pixel'>
               <normal_map>__default__</normal_map>
             </shader>
+            <emissive>0 0 0 1</emissive>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
-          <transparency>0</transparency>
+          <transparency>0.5</transparency>
           <cast_shadows>1</cast_shadows>
         </visual>
         <collision name='collision'>
@@ -211,8 +215,8 @@
           <surface>
             <friction>
               <ode>
-                <mu>0.01</mu>
-                <mu2>0.01</mu2>
+                <mu>0.0001</mu>
+                <mu2>0.0001</mu2>
                 <fdir1>0 0 0</fdir1>
                 <slip1>0</slip1>
                 <slip2>0</slip2>
@@ -248,7 +252,7 @@
                 <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
                 <soft_cfm>0</soft_cfm>
                 <soft_erp>0.2</soft_erp>
-                <kp>500000</kp>
+                <kp>10000</kp>
                 <kd>0</kd>
               </bullet>
             </contact>
@@ -257,7 +261,6 @@
       </link>
       <static>0</static>
       <allow_auto_disable>1</allow_auto_disable>
-      <pose>0 0 0.855097 0 -0 0</pose>
     </model>
   </world>
 </sdf>

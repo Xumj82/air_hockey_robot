@@ -13,7 +13,7 @@
   <xacro:property name="sonar_height" value="0.02" /> 
   <xacro:property name="sonar_link" value="0.1" /> 
   <xacro:property name="pusher_height" value="0.02" /> <!-- Space btw top of beam and the each joint -->
-  <xacro:property name="pusher_radius" value="0.045" />
+  <xacro:property name="pusher_radius" value="0.04" />
 
   <!-- Import all Gazebo-customization elements, including Gazebo colors -->
   <xacro:include filename="$(find hockey_robot_description)/urdf/hockey_robot.gazebo" />
@@ -32,14 +32,14 @@
   <link name="base_link">
     <visual>
       <geometry>
-        <mesh filename="package://hockey_robot_description/meshes/hockeytablev2.dae"/>
+        <mesh filename="package://hockey_robot_description/meshes/hockeytablev4.dae"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.46 -0.7 -0.8"/>
       <material name="white"/>
     </visual>
     <collision>
       <geometry>
-        <mesh filename="package://hockey_robot_description/meshes/hockeytablev2.dae"/>
+        <mesh filename="package://hockey_robot_description/meshes/hockeytablev4.dae"/>
       </geometry>
       <origin rpy="0 0 0" xyz="-0.46 -0.7 -0.8"/>
     </collision>
@@ -108,7 +108,7 @@
   <joint name="sonar_1_joint" type="fixed">
     <axis xyz="0 0 0" />
     <!--rigin xyz="0 1 ${height3 - axel_offset*2}" rpy="0 0 0"/-->
-    <origin xyz="-0.15 -0.95 ${sonar_height/2}" rpy="0 0 0"/>
+    <origin xyz="-0.26 -0.95 ${sonar_height/2}" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="sonar_1"/>
   </joint>
@@ -138,7 +138,7 @@
   <joint name="sonar_2_joint" type="fixed">
     <axis xyz="0 0 0" />
     <!--rigin xyz="0 1 ${height3 - axel_offset*2}" rpy="0 0 0"/-->
-    <origin xyz="0.15 0.95 ${sonar_height/2}" rpy="0 0 ${pi}"/>
+    <origin xyz="0.26 0.95 ${sonar_height/2}" rpy="0 0 ${pi}"/>
     <parent link="base_link"/>
     <child link="sonar_2"/>
   </joint>
@@ -243,13 +243,13 @@
   <link name="pusher_2">
     <visual>
       <geometry>
-        <cylinder length="0.02" radius="0.045"/>
+        <cylinder length="0.02" radius="${pusher_radius}"/>
       </geometry>
       <material name="black"/>
     </visual>
     <collision>
       <geometry>
-        <cylinder length="0.02" radius="0.045"/>
+        <cylinder length="0.02" radius="${pusher_radius}"/>
       </geometry>
     </collision>
     <inertial>

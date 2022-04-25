@@ -20,14 +20,6 @@ def pause(hand_sign:Int16):
         pause_physics_client=rospy.ServiceProxy('/gazebo/unpause_physics',Empty)
         pause_physics_client(EmptyRequest())
         
-    # if hand_sign.data == 2 and referee.status == 1:
-    #     rospy.wait_for_service("/gazebo/pause_physics")
-    #     pause_physics_client=rospy.ServiceProxy('/gazebo/pause_physics',Empty)
-    #     pause_physics_client(EmptyRequest())
-    
-    # if hand_sign.data != 2:
-    #     referee.status = 1-referee.status
-
 
 def reset_puck(side):
     print(side)
@@ -49,13 +41,14 @@ def reset_puck(side):
         print("Service call failed: ",e)
 
 def callback_blue(data:Range):
-    # score[1] +=1
     side = 'blue'
     if cur_range[0] > thr and data.range <= thr:
         score[1] += 1
         reset_puck(side)
+        # goal_pub.publish('1')
     cur_range[0] = data.range
     score_pub.publish('red vs blue --- {}:{}'.format(score[0],score[1]))
+    
     
     
 
@@ -64,25 +57,26 @@ def callback_red(data:Range):
     if cur_range[1] > thr and data.range <= thr:
         score[0] +=1
         reset_puck(side)
+        # goal_pub.publish('-1')
     cur_range[1] = data.range
     score_pub.publish('red vs blue --- {}:{}'.format(score[0],score[1]))
     
+    
+def callback_reset(data):
+    side = random.choice(["red", "blue"]) 
+    reset_puck(side)
 
-def listener():
+def referee():
 
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
     global score
     global cur_range
     global thr
-    thr = 0.3
+    thr = 0.5
     score = [0,0]
     cur_range = [0.3,0.3]
 
     global score_pub
+    global goal_pub
     global side
     global referee
     referee = Referee()
@@ -90,16 +84,18 @@ def listener():
     side = random.choice(["red", "blue"]) 
 
     score_pub = rospy.Publisher('hockey_robot/referee/score', String, queue_size=10)
+    # goal_pub = rospy.Publisher('hockey_robot/referee/goal', String, queue_size=10)
     # serve_pub = rospy.Publisher('hockey_robot/referee/side', String, queue_size=10)
     
 
     
     rospy.init_node('referee', anonymous=True)
     # serve_pub.publish(side)
-    reset_puck(side)
+    # reset_puck(side)
     # rospy.Subscriber("/hockey_robot/joint_states",JointState, callback_1)
     rospy.Subscriber("/hockey_robot/laser/sonar_1", Range, callback_blue)
     rospy.Subscriber("/hockey_robot/laser/sonar_2", Range, callback_red)
+    rospy.Subscriber("/hockey_robot/puck/reset_pose", String, callback_reset)
     # rospy.Subscriber("/hockey_robot/gest_controller/hand_sign",Int16, pause)
     
     # spin() simply keeps python from exiting until this node is stopped
@@ -108,4 +104,4 @@ def listener():
     
 
 if __name__ == '__main__':
-    listener()
+    referee()
