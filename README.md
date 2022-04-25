@@ -123,3 +123,6 @@ Get topic message type:
 ```
 rostopic type [topic name]
 ```
+
+## 5.[Dqn learning of this robot](https://github.com/Xumj82/reinforcement_learning_ros)
+Not finished yet. // Apr 26 2022
