@@ -25,7 +25,14 @@ source devel/setup.bash
 ```
 cd ~/catkin_ws/
 catkin_make
+source devel/setup.bash
 ```
+Please install the package with below cammand if it ask you to install package.</br>
+If you are using Conda or any virtualenv, please re-run 'source devel/setup.bash' after you change your python environment.</br>
+```
+apt install ros-noetic-<package name>
+```
+
 
 # Air hockey robot
 ## 1.View robot in RViz
@@ -36,27 +43,25 @@ Robot structure is built in hockey_robot_description/urdf/hockey_robot.xacro.Ple
 ![Rviz preview](/src/rviz_preview.png)
 
 
-## 2.View and control robot in Gazebo
+## 2.Start robot in Gazebo
 ```
 roslaunch hockey_robot_gazebo air_hockey.launch
 ```
-![Gazebo preview](/src/gazebo_launch.png)
-Open a new terminal
-```
-rqt
-```
-Then click <strong>Plugins->Image View</strong>, click <strong>Introsepction->Node Graph</strong>
-![rqt gui](/src/rqt_gui.png)
 
-## 3.Control robot with simlpe python
-[Controller_1](/hockey_robot_gazebo/scripts/controller_1.py)
+Gazebo GUI is disabled default. You can change setting as below in [air_hockey.launch](hockey_robot_gazebo/launch/air_hockey.launch)
 ```
-rosrun hockey_robot_gazebo controller_1.py
+<arg name="gui" default="true"/> 
 ```
-[Controller_2](/hockey_robot_gazebo/scripts/controller_2.py)
-```
-rosrun hockey_robot_gazebo controller_2.py
-```
+
+![Gazebo preview](/src/gazebo_launch.png)
+
+
+## 3.Open [Web GUI](hockey_robot_gazebo/scripts/webGUI.html) to control
+
+Please open this html file using Chrome and turn on your camera !!</br>
+After toggle 'play' button, you can use your hand to control the blue racket. CLOSE hand will grip the racket, and OPEN hand will release the racket.</br>
+Any goals will make the game reset</br>
+![Web GUI](/src/webGUI.png)
 
 ## 4.Some useful commands
 List topics:
